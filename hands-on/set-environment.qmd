@@ -1,0 +1,8 @@
+---
+title: "Set Environment (Apptainer/Conda)"
+---
+
+# Setting an environment with apptainer or conda
+
+Content for Setting an environment with apptainer or conda.
+
