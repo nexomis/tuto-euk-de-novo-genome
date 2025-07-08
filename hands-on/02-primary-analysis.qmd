@@ -1,0 +1,501 @@
+---
+title: "Primary Analysis: Quality Control and Preprocessing"
+author: Julien Fouret
+format: html
+execute:
+  eval: false
+  echo: true
+---
+
+# Primary Analysis: Quality Control and Preprocessing
+
+After downloading our genomic datasets, the next critical step is to assess data quality and perform necessary preprocessing. This chapter covers quality control (QC) assessment, read filtering, trimming, and merging operations for both Illumina short-read and Oxford Nanopore long-read data.
+
+Quality control is essential because: - Raw sequencing data often contains low-quality bases, especially at read ends - Adapter sequences may remain attached to reads - Some reads may be too short to be useful for assembly - Understanding data characteristics helps optimize downstream analysis parameters
+
+We'll use a comprehensive workflow that includes:
+
+1.  **Initial QC assessment** to understand raw data characteristics
+2.  **Preprocessing** (filtering, trimming, merging) to improve data quality
+3.  **Post-processing QC** to verify improvements
+4.  **Comprehensive reporting** with MultiQC
+
+## Configuration and Setup
+
+### Environment Variables
+
+We'll continue using the environment variables from the previous chapter. If starting fresh, set them again:
+
+``` bash
+export SN=tuto482
+export NCPUS=12
+```
+
+### Software Dependencies
+
+This workflow uses several bioinformatics tools, each optimized for specific data types and tasks:
+
+-   **FastQC**: Quality assessment for Illumina short reads
+-   **NanoPlot**: Quality assessment specialized for long reads (Nanopore/PacBio)
+-   **fastp**: Ultra-fast preprocessing tool for both short and long reads
+-   **MultiQC**: Aggregates QC reports from multiple tools
+
+#### Apptainer Aliases
+
+``` bash
+alias fastqc="apptainer run docker://staphb/fastqc fastqc"
+alias NanoPlot="apptainer run docker://staphb/nanoplot NanoPlot"
+alias fastp="apptainer run docker://staphb/fastp fastp"
+alias multiqc="apptainer run docker://staphb/multiqc multiqc"
+alias seqtk="apptainer run docker://staphb/seqtk seqtk"
+alias kraken2="apptainer run docker://staphb/kraken2 kraken2"
+```
+
+#### Docker Aliases
+
+``` bash
+alias fastqc="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/fastqc fastqc"
+alias nanoplot="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/nanoplot NanoPlot"
+alias fastp="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/fastp fastp"
+alias multiqc="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/multiqc multiqc"
+alias seqtk="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/seqtk seqtk"
+alias kraken2="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/kraken2 kraken2"
+```
+
+#### Conda
+
+``` bash
+# Create environment with all required tools
+conda create -n qc-tools -c bioconda fastqc nanoplot fastp kraken2 seqtk multiqc
+
+# Activate the environment
+conda activate qc-tools
+```
+
+## Directory Structure Setup
+
+Let's create an organized directory structure for our analysis:
+
+``` bash
+# Navigate to working directory and create structure
+mkdir -p 02-primary/{trimmed,merged,reports,kraken2}
+mkdir -p 02-primary/{fastQC,nanoplot}/{raw,processed}
+mkdir -p 02-primary/trimmed/sub
+```
+
+**Directory structure:**
+
+-   `raw/`: Raw sequencing data and initial QC reports
+-   `trimmed/`: Filtered and trimmed data with QC reports
+-   `trimmed/sub/`: Subsampled datasets for analysis
+-   `merged/`: Merged Illumina reads (when applicable) with QC
+-   `kraken2/`: Kraken2 database and taxonomic classification results
+-   `reports/`: Comprehensive MultiQC reports
+
+## Initial Quality Control Assessment
+
+Before any preprocessing, we need to understand the characteristics of our raw data. This baseline assessment helps us:
+
+-   Identify potential issues (adapter contamination, quality drops, etc.)
+-   Set appropriate filtering parameters
+-   Evaluate the success of preprocessing steps
+
+### Illumina Data QC with FastQC
+
+FastQC provides comprehensive quality metrics for short-read data, including per-base quality scores, GC content, adapter content, and sequence duplication levels.
+
+``` bash
+# Run FastQC on raw Illumina data
+fastqc --threads $NCPUS --memory 8000 \
+  --extract --outdir 02-primary/fastQC/raw/ \
+  01-rawdata/${SN}-illumina_R1.fastq.gz 01-rawdata/${SN}-illumina_R2.fastq.gz
+```
+
+**Key FastQC metrics to examine:**
+
+-   **Per base sequence quality**: Should be \>20 (preferably \>30) across most of the read
+-   **Per sequence quality scores**: Distribution should be skewed toward high quality
+-   **Adapter content**: Should be minimal in good data
+-   **Sequence duplication levels**: High duplication may indicate PCR bias
+
+### Nanopore Data QC with NanoPlot
+
+NanoPlot is specifically designed for long-read technologies and provides metrics relevant to Nanopore data characteristics.
+
+``` bash
+# Run NanoPlot on raw Nanopore data
+mkdir -p 02-primary/nanoplot/
+NanoPlot --fastq 01-rawdata/${SN}-nanopore.fastq.gz \
+  --outdir 02-primary/nanoplot/raw/ --info_in_report \
+  --loglength --threads $NCPUS
+```
+
+**Key NanoPlot metrics to examine:**
+
+-   **Read length distribution**: Nanopore typically produces reads from 1kb to \>100kb
+-   **Quality score distribution**: Lower than Illumina but should show reasonable distribution
+-   **Yield over time**: Helps assess sequencing run performance
+
+## Preprocessing: Filtering and Trimming
+
+Based on the initial QC results, we'll now filter and trim our data to improve quality while retaining maximum useful information.
+
+### Illumina Data Preprocessing with fastp
+
+fastp is an ultra-fast tool that combines multiple preprocessing steps: adapter trimming, quality filtering, and read merging. We provide two filtering options with different stringency levels:
+
+::: panel-tabset
+#### Option A: Moderate Filtering
+
+**Parameters:** Average quality ≥28, minimum length 101bp
+
+This option provides a balance between data retention and quality improvement, suitable for most genome assembly projects.
+
+``` bash
+# Run fastp for Illumina paired-end data (Option A)
+export opt=A
+fastp \
+  -i 01-rawdata/${SN}-illumina_R1.fastq.gz -I 01-rawdata/${SN}-illumina_R2.fastq.gz \
+  -o 02-primary/trimmed/${SN}-${opt}-illumina_R1.fastq.gz \
+  -O 02-primary/trimmed/${SN}-${opt}-illumina_R2.fastq.gz \
+  --detect_adapter_for_pe --trim_poly_g --trim_poly_x \
+  --average_qual 28 --length_required 101 \
+  --html 02-primary/trimmed/${SN}-${opt}-illumina_fastp.html \
+  --cut_right_window_size 4 --cut_right_mean_quality 20 --cut_right \
+  --cut_tail_window_size 4 --cut_tail_mean_quality 25 --cut_tail \
+  --thread $NCPUS
+```
+
+#### Option B: Stringent Filtering
+
+**Parameters:** Average quality ≥30, minimum length 125bp
+
+This option provides higher quality thresholds for projects requiring maximum data quality, though with potentially higher data loss.
+
+``` bash
+# Run fastp for Illumina paired-end data (Option B)
+export opt=B
+fastp \
+  -i 01-rawdata/${SN}-illumina_R1.fastq.gz -I 01-rawdata/${SN}-illumina_R2.fastq.gz \
+  -o 02-primary/trimmed/${SN}-${opt}-illumina_R1.fastq.gz \
+  -O 02-primary/trimmed/${SN}-${opt}-illumina_R2.fastq.gz \
+  --detect_adapter_for_pe --trim_poly_g --trim_poly_x \
+  --average_qual 30 --length_required 125 \
+  --html 02-primary/trimmed/${SN}-${opt}-illumina_fastp.html \
+  --cut_right_window_size 4 --cut_right_mean_quality 25 --cut_right \
+  --cut_tail_window_size 4 --cut_tail_mean_quality 28 --cut_tail \
+  --thread $NCPUS
+```
+:::
+
+**fastp parameters explained:**
+
+-   `--detect_adapter_for_pe`: Automatically detect and remove adapters
+-   `--trim_poly_g/x`: Remove poly-G/X tails (common in NextSeq/NovaSeq)
+-   `--average_qual`: Minimum average quality score threshold
+-   `--length_required`: Minimum read length after trimming
+-   `--cut_right/tail`: Quality-based trimming from 3' end
+
+**Choosing between options:** - **Option A** is recommended for most projects, providing good quality while preserving data - **Option B** is suitable when maximum quality is required and sufficient coverage depth is available
+
+### Nanopore Data Preprocessing
+
+For Nanopore data, we focus on length and quality filtering rather than adapter trimming:
+
+``` bash
+# Run fastp for Nanopore data (quality and length filtering)
+fastp \
+  -i 01-rawdata/${SN}-nanopore.fastq.gz -o 02-primary/trimmed/${SN}-nanopore.fastq.gz \
+  --disable_adapter_trimming \
+  --average_qual 16 --length_required 1000 \
+  --html 02-primary/trimmed/${SN}-nanopore_fastp.html \
+  --thread $NCPUS
+```
+
+**Nanopore-specific parameters:**
+
+-   `--disable_adapter_trimming`: Adapters typically removed during basecalling
+-   `--average_qual 16`: More lenient quality threshold for long reads
+-   `--length_required 1000`: Remove very short reads that are less useful for assembly
+
+> Note that basecalling and important preliminary steps to clean nanopore reads are not seen here.
+
+## Read Merging (Illumina Only)
+
+For Illumina paired-end data, overlapping read pairs can be merged to create longer, higher-quality reads. This is particularly beneficial for genome assembly.
+
+::: panel-tabset
+#### Option A: Moderate Filtering
+
+``` bash
+# Merge overlapping Illumina read pairs (Option A)
+export opt=A
+fastp \
+  --merge --correction --merged_out 02-primary/merged/${SN}-${opt}-illumina.fastq.gz \
+  --disable_quality_filtering \
+  -i 02-primary/trimmed/${SN}-${opt}-illumina_R1.fastq.gz \
+  -I 02-primary/trimmed/${SN}-${opt}-illumina_R2.fastq.gz \
+  -o 02-primary/merged/${SN}-${opt}-illumina_R1.fastq.gz \
+  -O 02-primary/merged/${SN}-${opt}-illumina_R2.fastq.gz \
+  --detect_adapter_for_pe --trim_poly_g --trim_poly_x \
+  --html merged/${SN}-${opt}-illumina_merge_fastp.html \
+  --thread $NCPUS
+```
+
+#### Option B: Stringent Filtering
+
+``` bash
+# Merge overlapping Illumina read pairs (Option B)
+export opt=B
+fastp \
+  --merge --correction --merged_out 02-primary/merged/${SN}-${opt}-illumina.fastq.gz \
+  --disable_quality_filtering \
+  -i 02-primary/trimmed/${SN}-${opt}-illumina_R1.fastq.gz \
+  -I 02-primary/trimmed/${SN}-${opt}-illumina_R2.fastq.gz \
+  -o 02-primary/merged/${SN}-${opt}-illumina_R1.fastq.gz \
+  -O 02-primary/merged/${SN}-${opt}-illumina_R2.fastq.gz \
+  --detect_adapter_for_pe --trim_poly_g --trim_poly_x \
+  --html merged/${SN}-${opt}-illumina_merge_fastp.html \
+  --thread $NCPUS
+```
+:::
+
+**Merging benefits:**
+
+-   Creates longer reads from overlapping pairs
+-   Improves base quality through consensus
+-   Reduces data complexity for assembly algorithms
+-   Maintains unmerged pairs for additional coverage
+
+## Post-Processing Quality Control
+
+After preprocessing, we need to verify that our filtering and trimming steps improved data quality without excessive data loss.
+
+### Post-Processing QC for Illumina Data
+
+``` bash
+fastqc --threads $NCPUS --memory 8000 \
+  --extract --outdir 02-primary/fastQC/processed \
+  02-primary/merged/*illumina*.fastq.gz
+```
+
+### Post-Processing QC for Nanopore Data
+
+``` bash
+NanoPlot --fastq 02-primary/trimmed/${SN}-nanopore.fastq.gz \
+  --outdir 02-primary/nanoplot/processed --info_in_report \
+  --loglength --threads $NCPUS
+```
+
+## Taxonomic Classification with Kraken2
+
+Taxonomic classification helps identify potential contamination and provides insights into the composition of your sequencing data. We'll use Kraken2, a fast and accurate taxonomic classifier, on both full datasets and subsampled data to demonstrate scalable analysis approaches.
+
+### Database Setup
+
+First, we need to download and set up the Kraken2 database. We'll use the PlusPF database which includes bacteria, archaea, viruses, fungi, and protozoa:
+
+``` bash
+# Download and extract Kraken2 database
+cd 02-primary/kraken2
+mkdir -p k2_pluspf_08gb_20250402
+cd k2_pluspf_08gb_20250402
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_08gb_20250402.tar.gz
+tar -xzf k2_pluspf_08gb_20250402.tar.gz
+rm k2_pluspf_08gb_20250402.tar.gz
+cd ../../..
+```
+
+> Note that we are using a capped database limited to 8Gb (in place of ~70). Therefore sensitivity will not be the best. In real world scenario it's recommended to use the complete database.
+
+### Subsampling with seqtk
+
+For demonstration purposes and faster analysis, we'll create subsampled datasets with 100,000 reads each. This approach is useful for:
+
+-   Quick preliminary analysis
+-   Testing workflows before full-scale analysis
+-   Reducing computational requirements for large datasets
+
+``` bash
+# Create subsamples of trimmed Illumina data (100k reads each)
+# Set seed for reproducible subsampling
+export SEED=42
+export opt=A
+# Subsample Option A datasets
+seqtk sample -s $SEED 02-primary/trimmed/${SN}-${opt}-illumina_R1.fastq.gz 100000 | \
+  gzip > 02-primary/trimmed/sub/${SN}-${opt}-illumina_R1_sub100k.fastq.gz
+
+seqtk sample -s $SEED 02-primary/trimmed/${SN}-${opt}-illumina_R2.fastq.gz 100000 | \
+  gzip > 02-primary/trimmed/sub/${SN}-${opt}-illumina_R2_sub100k.fastq.gz
+```
+
+> Note that only 1 dataset is enough.
+
+**seqtk parameters explained:**
+
+-   `sample -s SEED`: Random sampling with fixed seed for reproducibility
+-   `100000`: Number of reads to sample
+-   Output is compressed with gzip for space efficiency
+
+### Kraken2 Classification
+
+Now we'll run Kraken2 on subsampled dataset to demonstrate the workflow scalability:
+
+#### Subsampled Datasets
+
+``` bash
+# Run Kraken2 on subsampled datasets (faster analysis)
+export opt=A
+kraken2 --db 02-primary/kraken2/k2_pluspf_08gb_20250402 \
+  --threads $NCPUS --paired \
+  --output 02-primary/kraken2/${SN}-${opt}-illumina_sub100k.kraken \
+  --report 02-primary/kraken2/${SN}-${opt}-illumina_sub100k.report \
+  02-primary/trimmed/sub/${SN}-${opt}-illumina_R1_sub100k.fastq.gz \
+  02-primary/trimmed/sub/${SN}-${opt}-illumina_R2_sub100k.fastq.gz
+```
+
+**Kraken2 parameters explained:**
+
+-   `--db`: Path to Kraken2 database
+-   `--threads`: Number of CPU threads to use
+-   `--paired`: Indicates paired-end reads
+-   `--output`: Detailed classification output (optional, can be large)
+-   `--report`: Summary report with taxonomic composition
+
+### Interpreting Kraken2 Results
+
+The Kraken2 report provides taxonomic composition with the following columns:
+
+1.  **Percentage of reads**: Fraction of reads assigned to this taxon
+2.  **Number of reads**: Absolute count of reads assigned
+3.  **Number of reads at this level**: Reads assigned specifically to this taxon
+4.  **Taxonomic rank**: D (domain), K (kingdom), P (phylum), C (class), O (order), F (family), G (genus), S (species)
+5.  **NCBI taxonomy ID**: Unique identifier for the taxon
+6.  **Scientific name**: Taxonomic name
+
+**Key metrics to examine:**
+
+-   **Unclassified reads**: High percentages may indicate novel organisms or poor database coverage
+-   **Dominant taxa**: Should align with expected organism(s)
+-   **Contamination indicators**: Unexpected taxa may suggest contamination
+
+## Comprehensive Reporting with MultiQC
+
+MultiQC aggregates results from multiple QC tools into a single, interactive HTML report, making it easy to compare before/after preprocessing results.
+
+``` bash
+# Generate comprehensive MultiQC report
+multiqc 02-primary/ --outdir 02-primary/reports/ --dirs
+```
+
+**MultiQC benefits:**
+
+-   Combines FastQC, NanoPlot, kraken2, and fastp reports
+-   Provides side-by-side comparisons
+-   Interactive plots for detailed exploration
+-   Summary statistics across all samples
+
+## Expected Outcomes
+
+After completing this primary analysis workflow, you should observe:
+
+``` bash
+02-primary
+├── fastQC
+│   ├── processed
+│   │   ├── tuto482-A-illumina_fastqc/
+│   │   ├── tuto482-A-illumina_fastqc.html
+│   │   ├── tuto482-A-illumina_fastqc.zip
+│   │   ├── tuto482-A-illumina_R1_fastqc/
+│   │   ├── tuto482-A-illumina_R1_fastqc.html
+│   │   ├── tuto482-A-illumina_R1_fastqc.zip
+│   │   ├── tuto482-A-illumina_R2_fastqc/
+│   │   ├── tuto482-A-illumina_R2_fastqc.html
+│   │   ├── tuto482-A-illumina_R2_fastqc.zip
+│   │   ├── tuto482-B-illumina_fastqc/
+│   │   ├── tuto482-B-illumina_fastqc.html
+│   │   ├── tuto482-B-illumina_fastqc.zip
+│   │   ├── tuto482-B-illumina_R1_fastqc/
+│   │   ├── tuto482-B-illumina_R1_fastqc.html
+│   │   ├── tuto482-B-illumina_R1_fastqc.zip
+│   │   ├── tuto482-B-illumina_R2_fastqc/
+│   │   ├── tuto482-B-illumina_R2_fastqc.html
+│   │   └── tuto482-B-illumina_R2_fastqc.zip
+│   └── raw
+│       ├── tuto482-illumina_R1_fastqc
+│       ├── tuto482-illumina_R1_fastqc.html
+│       ├── tuto482-illumina_R1_fastqc.zip
+│       ├── tuto482-illumina_R2_fastqc/
+│       ├── tuto482-illumina_R2_fastqc.html
+│       └── tuto482-illumina_R2_fastqc.zip
+├── merged
+│   ├── tuto482-A-illumina.fastq.gz
+│   ├── tuto482-A-illumina_R1.fastq.gz
+│   ├── tuto482-A-illumina_R2.fastq.gz
+│   ├── tuto482-B-illumina.fastq.gz
+│   ├── tuto482-B-illumina_R1.fastq.gz
+│   └── tuto482-B-illumina_R2.fastq.gz
+├── nanoplot
+│   ├── processed
+│   │   ├── ...
+│   │   ├── NanoPlot-report.html
+│   │   ├── NanoStats.txt
+│   │   ├── ...
+│   └── raw
+│       ├── ...
+│       ├── NanoPlot-report.html
+│       ├── NanoStats.txt
+│       ├── ...
+├── reports
+│   ├── multiqc_data/
+│   └── multiqc_report.html
+└── trimmed
+    ├── sub/
+    ├── tuto482-A-illumina_fastp.html
+    ├── tuto482-A-illumina_R1.fastq.gz
+    ├── tuto482-A-illumina_R2.fastq.gz
+    ├── tuto482-B-illumina_fastp.html
+    ├── tuto482-B-illumina_R1.fastq.gz
+    ├── tuto482-B-illumina_R2.fastq.gz
+    ├── tuto482-nanopore_fastp.html
+    └── tuto482-nanopore.fastq.gz
+```
+
+### Illumina Data Improvements:
+
+-   **Increased average quality scores** across read positions
+-   **Reduced adapter contamination** to near-zero levels
+
+### Nanopore Data Improvements:
+
+-   **Removal of very short reads** that don't contribute to assembly
+-   **Improved average quality** while maintaining read length advantages
+
+## Next Steps
+
+With high-quality, preprocessed sequencing data, we're now ready to proceed to:
+
+1.  **K-mer analysis** to estimate genome characteristics
+2.  **De novo genome assembly** using hybrid approaches
+3.  **Assembly quality assessment** and validation
+
+The cleaned datasets will serve as input for downstream assembly algorithms, where the improved data quality will directly translate to better assembly contiguity and accuracy.
+
+## Multiple datasets for assembly
+
+In de novo genome assembly, it's considered best practice to generate multiple processed datasets using different preprocessing parameters as input for assembly. This approach leverages the fundamental trade-off between data quality and sequencing depth.
+
+### The Quality vs. Depth Trade-off
+
+Different preprocessing stringency levels create datasets with distinct characteristics:
+
+-   **Less stringent filtering (Option A)**: Higher sequencing depth but potentially lower average quality
+-   **More stringent filtering (Option B)**: Higher average quality but reduced sequencing depth
+
+The optimal balance depends on several genome-specific factors.
+
+### Sequencing depth analysis
+
+-   **What is the expected depth for Illumina data (A/B)?**
+    -   Calculate: (Total bases sequenced) / (Estimated genome size)
+    -   Recommended minimum: 30-50x for short reads (100x is ideal); 10x-30x for long read

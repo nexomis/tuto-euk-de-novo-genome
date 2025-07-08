@@ -6,3 +6,8 @@ _site
 _trash
 
 
+/test*
+# ignore all except .qmd files in hands-on dir
+/hands-on/*
+!/hands-on/*.qmd
+

@@ -38,20 +38,16 @@ website:
             href: more/intro-nextflow.qmd
       - text: "Hands-on Practice"
         menu:
-          - text: "Set Environment (Apptainer/Conda)"
-            href: hands-on/set-environment.qmd
           - text: "Fetch Public Datasets"
-            href: hands-on/fetch-public-datasets.qmd
-          - text: "QCs with FastQC"
-            href: hands-on/qc-fastqc.qmd
-          - text: "Trimming/Merging with Fastp"
-            href: hands-on/trimming-merging-fastp.qmd
+            href: hands-on/01-fetch-public-datasets.qmd
+          - text: "Primary analysis"
+            href: hands-on/02-primary-analysis.qmd
           - text: "Kmer-based Analysis"
-            href: hands-on/kmer-analysis.qmd
+            href: hands-on/03-kmer-analysis.qmd
           - text: "Hybrid Assembly (SPAdes/MaSuRCA)"
-            href: hands-on/hybrid-assembly-spades-masurca.qmd
+            href: hands-on/04-hybrid-assembly-spades-masurca.qmd
           - text: "Assembly Evaluation with QUAST"
-            href: hands-on/assembly-evaluation-quast.qmd
+            href: hands-on/05-assembly-evaluation-quast.qmd
     right:
       - href: about.qmd
         text: About

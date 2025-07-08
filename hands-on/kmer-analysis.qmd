@@ -1,8 +1,0 @@
----
-title: "Kmer-based Analysis"
----
-
-# kmer-based analysis
-
-Content for kmer-based analysis.
-

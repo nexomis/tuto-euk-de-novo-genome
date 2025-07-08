@@ -1,8 +1,0 @@
----
-title: "QCs with FastQC"
----
-
-# QCs with fastQC
-
-Content for QCs with fastQC.
-

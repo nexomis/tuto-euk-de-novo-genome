@@ -6,14 +6,13 @@ title: "Base Calling & QC"
 
 ## Fundamentals
 
-Sanger Sequencing is the first game-changing sequencing method, it was developed in the 1970s and was used to sequence the first human genome in 2001. Sanger sequencing is a chain termination method, it uses a mixture of dNTPs and ddNTPs to terminate the DNA synthesis at a random position. 
+Sanger Sequencing is the first game-changing sequencing method, it was developed in the 1970s and was used to sequence the first human genome in 2001. Sanger sequencing is a chain termination method, it uses a mixture of dNTPs and ddNTPs to terminate the DNA synthesis at a random position.
 
 ![Sanger sequencing](base-calling-qc/sanger-seq.excalidraw.svg)
 
 As show on the figure above, Sanger sequencing will produce multiple fragments of DNA, each of which is a different length. The introduction of ddNTP will stop the DNA synthesis at a random position that match the base of the ddNTP. Later the fragments are separated by their length using gel electrophoresis. Reading each column in the gel will give the sequence of the DNA. The process is optimized with the use of fluorescent dyes that are incorporated into the DNA where only one reaction is enough the the sequence is interpreted based on the color.
 
-> **TODO** add a figure of the gel electrophoresis
-> **TODO** add a ref
+> **TODO** add a figure of the gel electrophoresis **TODO** add a ref
 
 ## Introduction to Second Generation Sequencing
 
@@ -25,8 +24,7 @@ Second Generation Sequencing (SGS) is a method of sequencing DNA that was develo
 
 ![Sequencing by synthesis](base-calling-qc/sbs-seq.excalidraw.svg)
 
-The signal read not on a single template but on a large number of templates simultaneously designated as cluster (polonies for polymerase colonies). 
-The reason why SBS produce relatively short reads is linked with this clustering process. Indeed the polymerase activity is not linear and the signal is not uniform across the cluster. When some template are late it results in a mixing signal from the previous cycle to prevent ultimately the signal analysis.
+The signal read not on a single template but on a large number of templates simultaneously designated as cluster (polonies for polymerase colonies). The reason why SBS produce relatively short reads is linked with this clustering process. Indeed the polymerase activity is not linear and the signal is not uniform across the cluster. When some template are late it results in a mixing signal from the previous cycle to prevent ultimately the signal analysis.
 
 This process was industrialized by companies such as Illumina where templates are deposited on a flowcell where a clustering process allow the forming of cluster for optimal signal acquisition.
 
@@ -40,8 +38,7 @@ So basically the sequencing process is based on Image Analysis. In addition to t
 
 > REF: https://knowledge.illumina.com/instrumentation/general/instrumentation-general-reference_material-list/000006557
 
-It's interesting to not that since, Illumina developed less expensive technology based on a double channel chemistry with only 2 dye for the 4 bases - and even a single channel chemistry.
-Nonetheless the methods might induce artefacts such as polyG tails at the end of reads due to the absence of base for short fragments.
+It's interesting to not that since, Illumina developed less expensive technology based on a double channel chemistry with only 2 dye for the 4 bases - and even a single channel chemistry. Nonetheless the methods might induce artefacts such as polyG tails at the end of reads due to the absence of base for short fragments.
 
 ![SBS Chemistries comparison](base-calling-qc/evoliution-sequencing-chem-web-graphic.jpg)
 
@@ -49,28 +46,19 @@ Nonetheless the methods might induce artefacts such as polyG tails at the end of
 
 ### Glossary for library description
 
-Fragment: The DNA fragment that will be sequenced.
-Read: The sequence read from the Fragment.
-Library: Fragment enriched with its adapters/barcode after library preparation.
-Insert: The part of the fragment which is not sequenced
+Fragment: The DNA fragment that will be sequenced. Read: The sequence read from the Fragment. Library: Fragment enriched with its adapters/barcode after library preparation. Insert: The part of the fragment which is not sequenced
 
 ![Glossary of components of a library](base-calling-qc/glossary.excalidraw.svg)
 
 ### Common Issues in sequencing depending on library size
 
-Depending on library size then can be different issues:
-1. In case of too short fragments, the reads can overlaps (if paired)
-2. In shorted gain, the reads can be contaminated by the adapter
-3. If shorter than the read length, there will be no signal and it might be problematic for 2 color chemistry and induce polyG tail artifacts.
+Depending on library size then can be different issues: 1. In case of too short fragments, the reads can overlaps (if paired) 2. In shorted gain, the reads can be contaminated by the adapter 3. If shorter than the read length, there will be no signal and it might be problematic for 2 color chemistry and induce polyG tail artifacts.
 
 ![Example of issues depending on library size](base-calling-qc/reads_issues.excalidraw.svg)
 
 ### DNA Library Preparation in SGS
 
-The DNA library preparation is a critical step. Important criteria are:
-- The fragmentation method
-- The fragment size
-- The Amplification method
+The DNA library preparation is a critical step. Important criteria are: - The fragmentation method - The fragment size - The Amplification method
 
 > TODO add an example of library preparation workflow
 
@@ -80,30 +68,22 @@ The third generation of sequencing focuses on both long read sequencing and dire
 
 Nowdays there are 2 leading provider for long read sequencing:
 
+PacBio (Pacific Biosciences) TGS Sequencing: - Uses Single Molecule Real-Time (SMRT) technology - DNA synthesis detected by fluorescent labels in real time - Generates long, high-accuracy reads (\>10 kb, especially with HiFi mode) - Well-suited for full-length transcript sequencing, genome assembly, and detecting structural variants
 
+Oxford Nanopore TGS Sequencing:
 
-PacBio (Pacific Biosciences) TGS Sequencing: 
-- Uses Single Molecule Real-Time (SMRT) technology
-- DNA synthesis detected by fluorescent labels in real time
-- Generates long, high-accuracy reads (>10 kb, especially with HiFi mode)
-- Well-suited for full-length transcript sequencing, genome assembly, and detecting structural variants
-     
-Oxford Nanopore TGS Sequencing: 
+-   DNA passes through a protein nanopore, changing electrical current
+-   Measures current changes to directly read DNA sequence in real time
+-   Can produce ultra-long reads (some over 100 kb)
+-   Portable devices (e.g., MinION) and rapid results useful for fieldwork, genome assembly, and epigenetic studies
 
-- DNA passes through a protein nanopore, changing electrical current
-- Measures current changes to directly read DNA sequence in real time
-- Can produce ultra-long reads (some over 100 kb)
-- Portable devices (e.g., MinION) and rapid results useful for fieldwork, genome assembly, and epigenetic studies
-     
 Of note there are also other technologies to obtain long reads such as True Synthetic Long Reads (TSLR), not covered here.
 
 XXX Add schematic of the two technologies
 
 ### Nanopore Base Calling
 
-XXX TODO
-- Add Graphics regarding the banchmarking of basecalling
-
+XXX TODO - Add Graphics regarding the banchmarking of basecalling
 
 ## Current sequencing errors type and rate per sequencing techno
 
@@ -115,10 +95,7 @@ TODO
 
 Prior sequencing it's best to select an individual which is representative. In case of a species with different chromosomes copy number depending on sex, the sex with the most chromosome shall be prioritized (E.g. female for human). The best would be to sequence both.
 
-Also it's important to select the right tissue considering:
-- The potential somatic mutations
-- The concentration of DNA after extraction and purification
-- With a known ploidy, the smaller the better
+Also it's important to select the right tissue considering: - The potential somatic mutations - The concentration of DNA after extraction and purification - With a known ploidy, the smaller the better
 
 It might be useful to study the karyotype of the species to select the right tissue.
 

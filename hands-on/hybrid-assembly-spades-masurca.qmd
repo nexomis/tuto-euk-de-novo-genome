@@ -1,8 +1,0 @@
----
-title: "Hybrid Assembly (SPAdes/MaSuRCA)"
----
-
-# Hybrid assembly with spades and MasurCA
-
-Content for Hybrid assembly with spades and MasurCA.
-

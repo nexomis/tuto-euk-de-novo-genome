@@ -1,8 +1,0 @@
----
-title: "Trimming/Merging with Fastp"
----
-
-# Trimming/Merging with fastp
-
-Content for Trimming/Merging with fastp.
-

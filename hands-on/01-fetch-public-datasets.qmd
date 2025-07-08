@@ -1,0 +1,136 @@
+---
+title: "Fetch Public Datasets"
+author: Julien Fouret
+format: html
+execute:
+  eval: false
+  echo: true
+---
+
+# Fetch Public datasets
+
+In this tutorial, we will download publicly available genomic datasets from the NCBI Sequence Read Archive (SRA). This is a common first step in genomic analysis workflows, allowing researchers to access high-quality sequencing data for comparative studies or method development.
+
+We have selected [PRJNA721899](https://www.ebi.ac.uk/ena/browser/view/PRJNA721899) in which 6 differently virulent strains of *Fusarium oxysporum* f. sp. *lini* were sequenced using both Illumina (short-read) and Oxford Nanopore (long-read) technologies. This dual-platform approach provides complementary data types ideal for hybrid genome assembly.
+
+We will focus on sample [SAMN13621855](https://www.ebi.ac.uk/ena/browser/view/SAMN13621855?show=reads) which corresponds to strain 482, a pathogenic isolate that will serve as our model organism for this de novo genome assembly tutorial.
+
+This work was published in [PMC8248858](https://pmc.ncbi.nlm.nih.gov/articles/PMC8248858/), providing valuable context about the biological significance of these strains.
+
+**Dataset overview:**
+
+-   Illumina paired-end data: `SRR14237206` (high accuracy, shorter reads)
+-   Oxford Nanopore data: `SRR14237202` (longer reads, higher error rate)
+
+## Configuration and Setup
+
+### Environment Variables
+
+First, we'll set up environment variables to store our SRA accession numbers. This makes our scripts more readable and easier to modify:
+
+``` bash
+export SRR_ILLUMINA=SRR14237206
+export SRR_NANOPORE=SRR14237202
+#set a sample name (SN)
+export SN=tuto482
+```
+
+These variables will be used throughout the data download process to reference our specific datasets. The sample name (`SN`) provides a consistent identifier that will be used across all files, making it easier to track and organize data from multiple samples in larger projects.
+
+### Software dependencies
+
+To download data from the SRA, we need the **SRA Tools** package, which includes `prefetch` and `fasterq-dump` utilities. Additionally, we'll use **pigz** for parallel compression of FASTQ files.
+
+Below are three different approaches to install and run these tools:
+
+We will use alias then for the rest of the tutorial to be agnostic from the.
+
+The use of sra-tools to fetch raw fastq is documented [here](https://github.com/ncbi/sra-tools/wiki/08.-prefetch-and-fasterq-dump).
+
+#### Apptainer
+
+``` bash
+alias prefetch="apptainer run docker://ncbi/sra-tools prefetch"
+alias fasterq-dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
+```
+
+#### Docker
+
+``` bash
+alias prefetch="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data ncbi/sra-tools prefetch"
+alias fasterq-dump="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data ncbi/sra-tools fasterq-dump"
+```
+
+**Note:** The `-v $(pwd):/data -w /data` flags mount your current directory to `/data` inside the container and set it as the working directory, ensuring downloaded files are accessible on your host system.
+
+#### Conda
+
+The SRA Tools package is available through the Bioconda channel. Create a dedicated conda environment for this tutorial:
+
+``` bash
+# Create a new conda environment with sra-tools
+conda create -n sra-tools -c bioconda sra-tools
+
+# Activate the environment
+conda activate sra-tools
+```
+
+Once installed, the `prefetch` and `fasterq-dump` commands will be directly available in your PATH without needing aliases.
+
+## Fetch Illumina data
+
+``` bash
+## Prefetch the SRA file
+prefetch $SRR_ILLUMINA
+
+## Extract Fastq from SRA
+fasterq-dump $SRR_ILLUMINA --split-files --progress
+
+## Compress files
+pigz -p 8 ${SRR_ILLUMINA}_* 
+## Clean
+rm -rf $SRR_ILLUMINA
+## Rename
+mkdir -p 01-rawdata/
+mv ${SRR_ILLUMINA}_1.fastq.gz 01-rawdata/$SN-illumina_R1.fastq.gz
+mv ${SRR_ILLUMINA}_2.fastq.gz 01-rawdata/$SN-illumina_R2.fastq.gz
+
+```
+
+> Note that this time, as the next, can be long to run; especially with a slow bandwidth.
+
+## Fetch Nanopore data
+
+The Nanopore data download follows a similar workflow, but note that long-read data typically produces a single FASTQ file (unlike paired-end Illumina data):
+
+``` bash
+## Download the Nanopore SRA file
+prefetch $SRR_NANOPORE
+
+## Extract FASTQ from SRA (single file for long reads)
+fasterq-dump $SRR_NANOPORE --split-files --progress
+
+## Compress the FASTQ file
+pigz -p 8 ${SRR_NANOPORE}.fastq 
+
+## Clean up intermediate files
+rm -rf $SRR_NANOPORE
+
+## Move to organized location with descriptive name
+mv ${SRR_NANOPORE}.fastq.gz 01-rawdata/$SN-nanopore.fastq.gz
+```
+
+**Expected output:** A single compressed FASTQ file containing Oxford Nanopore long reads, stored in the `01-rawdata/` directory.
+
+## Expected outputs 
+
+``` bash
+ls -lh 01-rawdata
+```
+
+``` bash
+total 3,4G
+-rw-rw-r-- 1 jfouret jfouret 1,3G juil.  3 09:27 tuto482-illumina_R1.fastq.gz
+-rw-rw-r-- 1 jfouret jfouret 1,4G juil.  3 09:27 tuto482-illumina_R2.fastq.gz
+-rw-rw-r-- 1 jfouret jfouret 724M juil.  3 10:08 tuto482-nanopore.fastq.gz
+```
