@@ -1,6 +1,9 @@
 project:
   type: website
   output-dir: _site
+  render: 
+    - "*.qmd"
+    - "*/*qmd"
 
 website:
   title: "De Novo Genome Assembly Tutorial"
