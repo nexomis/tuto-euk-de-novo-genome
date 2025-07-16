@@ -1,0 +1,65 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "De Novo Genome Assembly Tutorial"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: "Primary Analysis"
+        menu:
+          - text: "Base Calling & QC"
+            href: primary-analysis/base-calling-qc.qmd
+          - text: "Preliminary Analysis"
+            href: primary-analysis/preliminary-analysis.qmd
+      - text: "Secondary Analysis"
+        menu:
+          - text: "Genome Assembly Concepts"
+            href: secondary-analysis/concepts-genome-assembly.qmd
+          - text: "Contigs de novo Assembly"
+            href: secondary-analysis/contigs-de-novo-assembly.qmd
+          - text: "Scaffolding"
+            href: secondary-analysis/scaffolding.qmd
+          - text: "Assembly Evaluation"
+            href: secondary-analysis/assembly-evaluation.qmd
+      - text: "Tertiary Analysis"
+        menu:
+          - text: "Genome Annotation"
+            href: tertiary-analysis/genome-annotation.qmd
+          - text: "Comparative Genomics"
+            href: tertiary-analysis/comparative-genomics.qmd
+      - text: "More"
+        menu:
+          - text: "Reference-enabled Bioinformatics"
+            href: more/reference-enabled-bioinformatics.qmd
+          - text: "Intro to NextFlow"
+            href: more/intro-nextflow.qmd
+      - text: "Hands-on Practice"
+        menu:
+          - text: "Fetch Public Datasets"
+            href: hands-on/01-fetch-public-datasets.qmd
+          - text: "Primary analysis"
+            href: hands-on/02-primary-analysis.qmd
+          - text: "Kmer-based Analysis"
+            href: hands-on/03-kmer-analysis.qmd
+          - text: "Hybrid Assembly (SPAdes/MaSuRCA)"
+            href: hands-on/04-hybrid-assembly-spades-masurca.qmd
+          - text: "Assembly Evaluation"
+            href: hands-on/05-assembly-evaluation.qmd
+          - text: "Secondary scaffolding"
+            href: hands-on/06-scaffolding.qmd
+    right:
+      - href: about.qmd
+        text: About
+
+format:
+  html:
+    theme: flatly
+    toc: true
+    toc-location: left
+    number-sections: true
+    css: styles.css
+
+editor: visual

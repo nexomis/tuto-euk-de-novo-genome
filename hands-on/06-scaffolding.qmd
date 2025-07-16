@@ -1,0 +1,343 @@
+---
+title: "Scaffolding with Ragout"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 5
+execute:
+  eval: false
+  echo: true
+---
+
+# Scaffolding with Ragout
+
+In this chapter, we will use Ragout to scaffold our best de novo assembly. Scaffolding is the process of ordering and orienting contigs from a draft assembly into larger structures, called scaffolds, using reference genomes. This step is crucial for improving the contiguity of the assembly and approaching a chromosome-level assembly.
+
+We will use multiple reference genomes to guide the scaffolding process. Ragout will infer the correct order and orientation of the contigs based on synteny information from these references.
+
+## Configuration and Setup
+
+### Environment Variables
+
+We'll continue using the established environment variables:
+
+``` bash
+export SN=tuto482
+export NCPUS=12
+```
+
+### Software Dependencies
+
+We will use Ragout for this chapter.
+
+#### Apptainer
+
+``` bash
+alias ragout="apptainer run docker://ghcr.io/nexomis/ragout:build_1.0-ragout_2.3-hal_2.3-Sibelia_3.0.7 ragout"
+```
+
+#### Docker
+
+``` bash
+alias ragout="docker run --rm -u $UID:$GID -v $(pwd):$(pwd) -w $(pwd) ghcr.io/nexomis/ragout:build_1.0-ragout_2.3-hal_2.3-Sibelia_3.0.7 ragout"
+```
+
+#### Conda
+
+``` bash
+conda create -n ragout -c bioconda ragout
+conda activate ragout
+```
+
+### Directory Structure Setup
+
+Let's create an organized directory structure for our analysis:
+
+``` bash
+mkdir -p 06-scaffolding/references
+mkdir -p 06-scaffolding/ragout_output
+```
+
+## Data Preparation
+
+### Download Reference Genomes
+
+We will download four reference genomes to be used by Ragout.
+
+``` bash
+wget -P 06-scaffolding/references https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_ASM1308505v1_genomic.fna.gz
+wget -P 06-scaffolding/references https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/048/165/035/GCA_048165035.1_ASM4816503v1/GCA_048165035.1_ASM4816503v1_genomic.fna.gz
+wget -P 06-scaffolding/references https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/048/164/945/GCA_048164945.1_ASM4816494v1/GCA_048164945.1_ASM4816494v1_genomic.fna.gz
+wget -P 06-scaffolding/references https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/030/719/095/GCA_030719095.1_ASM3071909v1/GCA_030719095.1_ASM3071909v1_genomic.fna.gz
+```
+
+Ragout requires the input fasta files to be uncompressed and renamed with simple names.
+
+``` bash
+# Decompress and rename reference files
+gunzip 06-scaffolding/references/*.gz
+mv 06-scaffolding/references/GCF_013085055.1_ASM1308505v1_genomic.fna 06-scaffolding/references/Fo47.fasta
+mv 06-scaffolding/references/GCA_048165035.1_ASM4816503v1_genomic.fna 06-scaffolding/references/ZUM2407.fasta
+mv 06-scaffolding/references/GCA_048164945.1_ASM4816494v1_genomic.fna 06-scaffolding/references/V032g.fasta
+mv 06-scaffolding/references/GCA_030719095.1_ASM3071909v1_genomic.fna 06-scaffolding/references/ME23.fasta
+cp 04-assembly/masurca/option-A/flye*/assembly.fasta 06-scaffolding/references/${SN}.fasta
+```
+
+### Prepare Ragout Recipe File
+
+Ragout uses a recipe file to specify the input genomes and parameters. We will create one for our analysis. We will use the best assembly from the previous step (`04-assembly/masurca/option-A/flye*/assembly.fasta`) as the target assembly.
+
+``` bash
+
+# Create the recipe file
+cat > 06-scaffolding/ragout_recipe.rcp << EOF
+.references = Fo47,ZUM2407,V032g,ME23
+.target = ${SN}
+.naming_ref = Fo47
+
+Fo47.fasta = ${PWD}/06-scaffolding/references/Fo47.fasta
+ZUM2407.fasta = ${PWD}/06-scaffolding/references/ZUM2407.fasta
+V032g.fasta = ${PWD}/06-scaffolding/references/V032g.fasta 
+ME23.fasta = ${PWD}/06-scaffolding/references/ME23.fasta
+${SN}.fasta = ${PWD}/06-scaffolding/references/${SN}.fasta
+EOF
+```
+
+## Ragout with Sibelia (Default Method)
+
+The default method uses Sibelia for synteny block decomposition. While effective, this can be slow for larger genomes. We'll run Ragout with the recipe file we created using the `--refine` option to improve the assembly using the assembly graph.
+
+``` bash
+ragout 06-scaffolding/ragout_recipe.rcp \
+  -o 06-scaffolding/ragout_output \
+  --refine \
+  --solid-scaffolds \
+  -t $NCPUS
+```
+
+**Note**: This approach can be time-consuming for larger genomes. For faster processing, consider using the HAL alignment method described below.
+
+## Ragout with Cactus (HAL Alignment Method)
+
+For larger genomes (\>100Mb) or when faster processing is desired, we can use Cactus to create a HAL (Hierarchical Alignment) file, which Ragout can then use for synteny block decomposition. This approach is generally faster and more suitable for complex genomes.
+
+### Software Dependencies for Cactus and JolyTree
+
+#### Create Local Conda Environment for JolyTree
+
+Since the JolyTree container is missing dependencies, we'll create a local conda environment:
+
+``` bash
+# Create local conda environment in hands-on/venv
+conda create -p venv -c bioconda -c conda-forge jolytree
+```
+
+#### Apptainer (Cactus only)
+
+``` bash
+alias cactus="apptainer run docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.9 cactus"
+```
+
+#### Docker (Cactus only)
+
+``` bash
+alias cactus="docker run --rm -u $UID:$GID -v $(pwd):$(pwd) -w $(pwd) quay.io/comparative-genomics-toolkit/cactus:v2.9.9 cactus"
+```
+
+**Note**: JolyTree.sh will be available directly from the activated conda environment.
+
+### Generate Phylogenetic Tree with JolyTree
+
+Before creating the Cactus sequence file, we'll use JolyTree to generate an accurate phylogenetic tree from our reference genomes and target assembly. JolyTree is a fast alignment-free tool that can infer distance-based phylogenetic trees from genome assemblies.
+
+``` bash
+# Run JolyTree to generate phylogenetic tree
+conda activate ./venv
+JolyTree.sh -i 06-scaffolding/references -b 06-scaffolding/jolytree -t $NCPUS
+conda deactivate
+```
+
+**JolyTree parameters explained:**
+
+-   `-i`: Directory containing FASTA files (all genomes)
+-   `-b`: Basename for output files
+-   `-t`: Number of threads to use
+
+The generated tree file `06-scaffolding/jolytree.nwk` will contain the inferred phylogenetic relationships between all genomes.
+
+**Note on Alternative Tree Construction Methods:**
+
+JolyTree uses a sound methodology (Mash for distance estimation followed by tree construction algorithms), but its implementation lacks robustness and reproducibility. For more rigorous phylogenetic analysis, you can manually construct pairwise distance matrices based on k-mer frequencies using tools like:
+
+-   **KAT**: Can generate k-mer frequency histograms and compare k-mer profiles between genomes
+-   **Mash**: Estimates genome-to-genome distances using MinHash sketches of k-mer sets
+
+These distance matrices can then be used with phylogenetic reconstruction methods such as:
+
+-   **UPGMA** (Unweighted Pair Group Method with Arithmetic Mean)
+-   **Neighbor-joining**
+
+This manual approach provides better control over parameters and more reproducible results, especially for closely related genomes or when branch length accuracy is important for downstream analyses.
+
+### Manual Tree Editing for Cactus Compatibility
+
+**Important**: The JolyTree output may need manual editing to be compatible with Cactus requirements:
+
+1.  **Remove branch lengths**: Cactus can work without branch lengths.
+2.  **Convert multifurcations to binary tree**: Cactus requires strictly binary trees (each internal node has exactly 2 children). If JolyTree produces any 3-way or higher splits, these need to be resolved into binary splits.
+
+To edit the tree `06-scaffolding/jolytree.nwk` manually:
+
+``` bash
+(tuto482:0.1,Fo47:0.2,(ZUM2407:0.05,V032g:0.03,ME23:0.08):0.15);
+```
+
+into
+
+``` bash
+((tuto482,Fo47),((ZUM2407,V032g),ME23));
+```
+
+**Tree requirements for Cactus:**
+
+-   Must be in Newick format
+-   Must be strictly binary (no multifurcations)
+-   All leaf nodes must correspond to genome names
+-   Branch lengths are ignored
+
+### Create Cactus Sequence File
+
+Now we'll create a sequence file for Cactus using the phylogenetic tree generated by JolyTree:
+
+``` bash
+# Create directory for Cactus workflow
+mkdir -p 06-scaffolding/cactus
+
+cat > 06-scaffolding/cactus/genomes.txt << EOF
+# Phylogenetic tree generated by JolyTree
+((ME23,(ZUM2407,(V032g,Fo47))),tuto482);
+
+# Genome paths (must be absolute paths)
+${SN} ${PWD}/06-scaffolding/references/${SN}.fasta
+Fo47 ${PWD}/06-scaffolding/references/Fo47.fasta
+ZUM2407 ${PWD}/06-scaffolding/references/ZUM2407.fasta
+V032g ${PWD}/06-scaffolding/references/V032g.fasta
+ME23 ${PWD}/06-scaffolding/references/ME23.fasta
+EOF
+```
+
+### Run Cactus to Generate HAL Alignment
+
+``` bash
+# Run Cactus to create HAL alignment
+cactus 06-scaffolding/cactus/js \
+  06-scaffolding/cactus/genomes.txt \
+  06-scaffolding/cactus/alignment.hal \
+  --maxCores $NCPUS
+```
+
+**Cactus parameters explained:**
+
+-   `js`: Job store directory for intermediate files
+-   `genomes.txt`: Sequence file with tree and genome paths
+-   `alignment.hal`: Output HAL alignment file
+-   `--maxCores`: Maximum number of CPU cores to use
+
+### Convert HAL to MAF Format
+
+After generating the HAL alignment, we need to convert it to MAF format for use with Ragout:
+
+``` bash
+# Set up cactus-hal2maf alias
+alias cactus-hal2maf="apptainer run docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.9 cactus-hal2maf"
+
+# Convert HAL to MAF format
+cactus-hal2maf 06-scaffolding/cactus/js-hal2maf \
+  06-scaffolding/cactus/alignment.hal \
+  06-scaffolding/cactus/alignment.maf \
+  --refGenome Fo47 \
+  --filterGapCausingDupes \
+  --noAncestors \
+  --dupeMode single \
+  --chunkSize 500000
+```
+
+**cactus-hal2maf parameters explained:**
+
+-   `--refGenome`: Reference genome for MAF projection (Fo47 for consistent chromosome naming)
+-   `--chunkSize`: Size of chunks for parallel processing
+
+### Create Ragout Recipe for MAF Method
+
+Now create a recipe file that uses the MAF alignment:
+
+``` bash
+# Create MAF-based recipe file
+cat > 06-scaffolding/ragout_maf_recipe.rcp << EOF
+.references = Fo47,ZUM2407,V032g,ME23
+.target = ${SN}
+.naming_ref = Fo47
+.maf = ${PWD}/06-scaffolding/cactus/alignment.maf
+
+# Individual FASTA paths are required for MAF backend
+Fo47.fasta = ${PWD}/06-scaffolding/references/Fo47.fasta
+ZUM2407.fasta = ${PWD}/06-scaffolding/references/ZUM2407.fasta
+V032g.fasta = ${PWD}/06-scaffolding/references/V032g.fasta
+ME23.fasta = ${PWD}/06-scaffolding/references/ME23.fasta
+${SN}.fasta = ${PWD}/06-scaffolding/references/${SN}.fasta
+EOF
+```
+
+### Run Ragout with MAF Alignment
+
+``` bash
+ragout 06-scaffolding/ragout_maf_recipe.rcp \
+  -o 06-scaffolding/ragout_maf_output \
+  --solid-scaffolds \
+  -s maf \
+  -t $NCPUS
+```
+
+**MAF method parameters:**
+
+-   `-s maf`: Specifies MAF as the synteny backend
+-   Individual FASTA paths must be provided alongside the MAF file
+
+## Method Comparison
+
+| Method | Processing Time | Genome Size Suitability | Memory Usage |
+|------------------|------------------|-------------------|------------------|
+| **Sibelia** | Slower | \<100Mb (bacterial, small eukaryotes) | Moderate |
+| **HAL/Cactus** | Faster | \>100Mb (large eukaryotes) | Higher initial, but more efficient overall |
+
+**Recommendations:**
+
+-   Use **Sibelia method** (default) for bacterial genomes or small eukaryotic genomes
+-   Use **HAL/Cactus method** for large eukaryotic genomes or when faster processing is needed
+
+## RNA-Seq Based Scaffolding with Agouti
+
+(This part will be seen after annotation tutorial)
+
+## Expected Outcomes
+
+After Ragout finishes, the output directory will contain the scaffolded assembly. The main output files are:
+
+### For Sibelia Method (`06-scaffolding/ragout_output/`):
+
+-   `${SN}_scaffolds.fasta`: The final scaffolded assembly
+-   `${SN}_unplaced.fasta`: Input contigs that could not be placed in the scaffolds
+-   `${SN}_scaffolds.agp`: The structure of the scaffolds in AGP format
+
+### For Cactus Method (`06-scaffolding/ragout_maf_output/`):
+
+-   `${SN}_scaffolds.fasta`: The final scaffolded assembly
+-   `${SN}_unplaced.fasta`: Input contigs that could not be placed in the scaffolds
+-   `${SN}_scaffolds.agp`: The structure of the scaffolds in AGP format
+
+### Additional Cactus Outputs (`06-scaffolding/cactus/`):
+
+-   `alignment.hal`: Multiple genome alignment in HAL format
+-   `alignment.maf`: Multiple genome alignment in HAL format
+
+You can then proceed to evaluate the quality of the new scaffolded assembly using QUAST and BUSCO, as described in the previous chapter. Compare the results from both methods to determine which approach works best for your specific dataset.

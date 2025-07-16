@@ -1,0 +1,91 @@
+---
+title: "Home"
+---
+
+# Introduction
+
+The objective of this tutorial is to learn *de novo* genome assembly for relatively small genomes (e.g. Fungii).
+
+This resource will provide you with the basic concepts in *de novo* genome assembly from and will distinguish three critical step for analysis.
+
+-   Primary analysis: In this step we are processing raw data from sequencing technology to obtain high quality data for later processing. Every step at this point is not specific of *de novo* assembly and common to many bio-informatics analysis.
+
+-   Secondary analysis: Secondary analysis refer here the the main type of analysis which is here *de novo* assembly i.e. the obtention the la largest continuous or scaffold sequence representative of the target individual. That includes quality controls.
+
+-   Tertiary Analysis refers to what can be done beyond the resolution of an assembly such as comparative genomics or annotation.
+
+## Objectives
+
+-   Master every steps of *de novo* assembly for eukaryote genomes
+-   Interpret the results at every steps
+-   Master the use the CLI tools
+-   Become fluent with apptainer/docker
+-   Be autonomous and independent for debugging
+
+## Requirements
+
+-   Be fluent in Unix/Linux
+
+-   Work on linux or eventually WSL2 on windows
+
+-   Be familiar with the use of apptainer/docker or conda
+
+-   Meets the performance criteria, at least 8 threads & 32GB RAM would be good for starts
+
+## Important notes
+
+### RTFM: Read The F\*\*\* Manual
+
+-   Try `tool -h`, `tool –help`, `tool -help`, or just `tool` or eventually `man tool`. Eventually in combination with `grep`.
+
+-   Try the tool's website <https://www.bioinformatics.babraham.ac.uk/projects/fastqc/>
+
+-   Or maybe the GitHub/GitLab: <https://github.com/s-andrews/FastQC>
+
+-   Look eventually at the paper describing the tool.
+
+### RTFE: Read The F\*\*\* Error \| Top 5
+
+1\. **File Not Found (`FileNotFoundError` or "No such file or directory")**
+
+-   **Example error message:** `bash: ./script.sh: No such file or directory` or `python: FileNotFoundError: [Errno 2] No such file or directory`
+
+-   **Typical cause:** Incorrect path, typo in filename, or missing input files.
+
+2\. **Out of Memory (`OOM_kill` or "Killed")**
+
+-   **Example error message:** `Killed` (on Linux, when a process is stopped by the system's out-of-memory killer), or `MemoryError` (in Python, R).
+
+-   **Typical cause:** Trying to process files or data too large for the available RAM.
+
+3\. **Cannot Find Shared Library (`cannot open shared object file: No such file or directory`, `cannot find xxx.so`)**
+
+-   **Example error message:** `error while loading shared libraries: libXYZ.so: cannot open shared object file: No such file or directory`
+
+-   **Typical cause:** Missing dependencies, or environment (e.g., LD_LIBRARY_PATH) not set correctly after software installation.
+
+-   **hints:** Search for any package that contains this file.
+
+4\. **Permission Denied (`PermissionError` or "Permission denied")**
+
+-   **Example error message:** `bash: ./some_script.sh: Permission denied`, or in Python, `PermissionError: [Errno 13] Permission denied`
+
+-   **Typical cause:** Trying to run or write to a file/folder without the necessary permissions.
+
+5\. **Segmentation Fault (`Segmentation fault (core dumped)`)**
+
+-   **Example error message:** `Segmentation fault (core dumped)`
+
+-   **Typical cause:** Bugs in compiled programs (common in C/C++ binaries used in bioinformatics), or sometimes hardware issues.
+
+-   **hints:** Check for corrupted or incorrect input files and formats.
+
+### STFE: Search The F\*\*\* Error \| Where ?
+
+-   General Search Engine such as DuckDuckGo or Google or Bing
+
+-   GitHub/GitLab issues or Discussions
+
+-   Community chat (Slack, Discord, Matrix) or forums (Reddit r/bioinformatics, Slack Overflow, Biostars)
+
+-   Eventually but EXTRA CAREFULLY: AI assistance & LLMs

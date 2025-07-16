@@ -1,0 +1,303 @@
+---
+title: "Hybrid Assembly: SPAdes and MaSuRCA"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 3
+execute:
+  eval: false
+  echo: true
+---
+
+# Hybrid Assembly: SPAdes and MaSuRCA
+
+Hybrid genome assembly combines the accuracy of short reads (Illumina) with the contiguity advantages of long reads (Nanopore/PacBio) to produce high-quality genome assemblies. This approach leverages the complementary strengths of both sequencing technologies to overcome their individual limitations.
+
+In this chapter, we'll perform hybrid genome assembly using two leading assemblers: **SPAdes** and **MaSuRCA**. Each tool employs distinct algorithmic approaches, making them suitable for different assembly scenarios and data characteristics.
+
+## Theoretical Background
+
+### SPAdes Hybrid Assembly
+
+SPAdes (St. Petersburg genome assembler) uses a multi-k-mer de Bruijn graph approach combined with sophisticated graph simplification algorithms. For hybrid assembly, SPAdes:
+
+-   **Error corrects** both short and long reads independently
+-   **Constructs assembly graphs** using multiple k-mer sizes
+-   **Integrates long reads** to resolve repeats and improve contiguity
+-   **Generates scaffolds** using paired-end and long-read information
+
+**Key strengths**: Excellent for bacterial genomes, robust error correction, handles complex genomic regions well.
+
+### MaSuRCA Hybrid Assembly
+
+MaSuRCA (Maryland Super Read Cabog Assembler) combines de Bruijn graph and Overlap-Layout-Consensus approaches using:
+
+-   **Super-reads**: Error-corrected short reads extended using k-mer graphs
+-   **Mega-reads**: Long reads corrected using Illumina data for hybrid assembly
+-   **CABOG/Flye integration**: Final assembly using corrected reads
+
+**Key strengths**: Excellent performance on larger eukaryotic genomes, superior handling of highly repetitive regions, mature hybrid assembly pipeline.
+
+### Assembly Strategy Comparison
+
+| Feature | SPAdes | MaSuRCA |
+|-------------------------|----------------------|-------------------------|
+| **Optimal for** | Bacterial, small eukaryotes | Large eukaryotes, complex genomes |
+| **Memory usage** | Moderate | High (genome-size dependent) |
+| **Runtime** | Fast-moderate | Moderate-slow |
+| **Repeat handling** | Good | Excellent |
+| **Configuration** | Simple | Advanced (config file) |
+
+## Configuration and Setup
+
+### Environment Variables
+
+We'll continue using the established environment variables from previous chapters:
+
+``` bash
+export SN=tuto482
+export NCPUS=12
+```
+
+### Software Dependencies
+
+Both assemblers are available through multiple installation methods. We provide three approaches consistent with the tutorial framework:
+
+#### Apptainer Aliases
+
+``` bash
+alias spades="apptainer run docker://staphb/spades spades.py"
+alias masurca_apptainer="apptainer run docker://staphb/masurca"
+```
+
+#### Docker Aliases
+
+``` bash
+alias spades="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/spades spades.py"
+alias masurca_docker="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data staphb/masurca masurca"
+```
+
+#### Conda Environment
+
+``` bash
+# Create environment with assembly tools
+conda create -n assembly-tools -c bioconda spades masurca
+
+# Activate the environment
+conda activate assembly-tools
+```
+
+## Directory Structure Setup
+
+Create an organized directory structure for assembly results:
+
+``` bash
+# Create main assembly directory
+mkdir -p 04-assembly/{spades,masurca}
+
+# Create subdirectories for different preprocessing options
+mkdir -p 04-assembly/spades/{option-A,option-B}
+mkdir -p 04-assembly/masurca/{option-A,option-B}
+```
+
+**Directory structure:**
+
+-   `spades/`: SPAdes assembly results for both preprocessing options
+-   `masurca/`: MaSuRCA assembly results and configuration files (configs stored in each option directory)
+
+## K-mer Size Selection
+
+Based on the k-mer analysis from Chapter 3, we'll use optimal k-mer sizes for assembly. For this tutorial, we'll use a representative k-mer range that typically works well for fungal genomes:
+
+``` bash
+# Define optimal k-mer sizes based on analysis (MAXIMUM=127)
+export KMERS="25,33,37,47,59,71,91,111,127"
+```
+
+> **Note**: In practice, you should select k-mer sizes based on your Chapter 3 analysis results, choosing sizes where genome size estimates were stable and consistent.
+
+## SPAdes Hybrid Assembly
+
+SPAdes hybrid assembly integrates Illumina paired-end reads, merged reads, and Nanopore long reads to produce high-quality assemblies. We'll run SPAdes on both preprocessing options to compare results.
+
+### Assembly Execution
+
+We'll demonstrate the assembly using Option A data (moderate filtering). The same approach can be applied to Option B data by changing the `opt` variable.
+
+``` bash
+# Set preprocessing option
+export opt=A
+
+# Run SPAdes hybrid assembly
+spades \
+  -1 02-primary/merged/${SN}-${opt}-illumina_R1.fastq.gz \
+  -2 02-primary/merged/${SN}-${opt}-illumina_R2.fastq.gz \
+  -s 02-primary/merged/${SN}-${opt}-illumina.fastq.gz \
+  --nanopore 02-primary/trimmed/${SN}-nanopore.fastq.gz \
+  --isolate \
+  -t $NCPUS \
+  -k $KMERS \
+  -o 04-assembly/spades/option-${opt}
+```
+
+**SPAdes parameters explained:**
+
+-   `-1/-2`: Paired-end read files (R1/R2)
+-   `-s`: Single-end reads (merged paired-end reads)
+-   `--nanopore`: Oxford Nanopore long reads
+-   `--isolate`: Optimizes for single bacterial/small eukaryotic genomes
+-   `-t`: Number of CPU threads
+-   `-k`: K-mer sizes for assembly (comma-separated)
+-   `-o`: Output directory
+
+### Optional: Assembly with Option B Data
+
+To compare preprocessing strategies, you can also run SPAdes with the more stringent Option B data:
+
+``` bash
+# Assembly with Option B (stringent filtering)
+export opt=B
+spades \
+  -1 02-primary/merged/${SN}-${opt}-illumina_R1.fastq.gz \
+  -2 02-primary/merged/${SN}-${opt}-illumina_R2.fastq.gz \
+  -s 02-primary/merged/${SN}-${opt}-illumina.fastq.gz \
+  --nanopore 02-primary/trimmed/${SN}-nanopore.fastq.gz \
+  --isolate \
+  -t $NCPUS \
+  -k $KMERS \
+  -o 04-assembly/spades/option-${opt}
+```
+
+> **Parameter optimization note**: Different k-mer combinations, memory settings, and coverage thresholds should be tested for optimal results. SPAdes also supports `--careful` mode for enhanced small variant detection.
+
+## MaSuRCA Hybrid Assembly
+
+MaSuRCA requires a configuration file that specifies data locations and assembly parameters. We'll create configurations for Option A data and demonstrate the complete assembly workflow.
+
+### Configuration File Creation
+
+Create a MaSuRCA configuration file for Option A data:
+
+``` bash
+# Create MaSuRCA configuration for Option A
+export opt=A
+cat > 04-assembly/masurca/option-${opt}/masurca_config.txt << EOF
+# MaSuRCA configuration for hybrid assembly
+
+DATA
+# Illumina paired-end reads
+PE = pe 300 50 $PWD/02-primary/merged/${SN}-${opt}-illumina_R1.fastq $PWD/02-primary/merged/${SN}-${opt}-illumina_R2.fastq
+PE = sr 300 50 $PWD/02-primary/merged/${SN}-${opt}-illumina.fastq
+# Nanopore long reads
+NANOPORE=$PWD/02-primary/trimmed/${SN}-nanopore.fastq
+END
+
+PARAMETERS
+# Essential parameters for hybrid assembly
+GRAPH_KMER_SIZE = auto
+USE_LINKING_MATES = 0
+USE_GRID = 0
+LHE_COVERAGE = 25
+MEGA_READS_ONE_PASS = 0
+LIMIT_JUMP_COVERAGE = 300
+CA_PARAMETERS = cgwErrorRate=0.15
+CLOSE_GAPS = 1
+NUM_THREADS = $NCPUS
+JF_SIZE = 2000000000
+SOAP_ASSEMBLY = 0
+FLYE_ASSEMBLY = 1
+END
+EOF
+```
+
+**Key MaSuRCA parameters explained:**
+
+-   `PE`: Paired-end library specification (prefix, mean insert size, stdev, forward reads, reverse reads)
+-   `NANOPORE`: Long reads file path
+-   `GRAPH_KMER_SIZE = auto`: Automatically determine optimal k-mer size
+-   `USE_LINKING_MATES = 0`: Recommended for hybrid assemblies with long reads
+-   `LHE_COVERAGE = 25`: Maximum long read coverage to use
+-   `FLYE_ASSEMBLY = 1`: Use Flye for final assembly (faster and often better quality)
+-   `JF_SIZE`: Jellyfish hash size (set to \~20x genome size)
+-   `NUM_THREADS`: Uses the `$NCPUS` variable for consistent thread usage
+
+> **Important**: File paths in MaSuRCA configuration files must be absolute paths. We use `$PWD` to convert relative paths to absolute paths, ensuring MaSuRCA can locate input files regardless of the working directory during assembly execution.
+
+### Decompress Libraries
+
+Compressed fastq are not supported so we need to decompress them:
+
+``` bash
+export opt=A
+pigz -d -p $NCPUS 02-primary/trimmed/${SN}-nanopore.fastq.gz 02-primary/merged/${SN}-${opt}-illumina.fastq.gz 02-primary/merged/${SN}-${opt}-illumina_R1.fastq.gz 02-primary/merged/${SN}-${opt}-illumina_R2.fastq.gz
+```
+
+### Generate Assembly Script
+
+Use the MaSuRCA configuration to generate the assembly script:
+
+``` bash
+# Generate MaSuRCA assembly script for Option A
+export opt=A
+masurca_apptainer bash -c "cd 04-assembly/masurca/option-${opt} ; masurca masurca_config.txt"
+```
+
+### Execute Assembly
+
+Run the generated assembly script:
+
+``` bash
+# Execute MaSuRCA assembly for Option A
+export opt=A
+masurca_apptainer bash -c "cd 04-assembly/masurca/option-${opt} ; ./assemble.sh"
+```
+
+### Optional: Assembly with Option B Data
+
+For comparison, create and run MaSuRCA assembly with Option B data.
+
+> **Parameter optimization note**: Different `LHE_COVERAGE` values (15-35), `MEGA_READS_ONE_PASS` settings, and error rates should be tested. For larger genomes, consider increasing `JF_SIZE` and adjusting `CA_PARAMETERS`.
+
+### Assembly Quality Indicators
+
+Key metrics to examine:
+
+**Contiguity metrics:**
+
+-   **Number of contigs**: Fewer contigs generally indicate better assembly
+-   **N50**: Length of the contig at which 50% of the assembly is contained in contigs of this size or larger
+-   **Largest contig**: Indicates ability to resolve long genomic regions
+
+**Completeness indicators:**
+
+-   **Total assembly size**: Should approximate expected genome size from k-mer analysis
+-   **Coverage representation**: All major genomic regions should be represented
+
+> **Note**: Comprehensive assembly evaluation using QUAST, BUSCO, and other tools will be covered in Chapter 5.
+
+## Expected Outcomes
+
+After completing the hybrid assembly workflow, you should have the following directory structure:
+
+``` bash
+04-assembly/
+├── spades/
+│   ├── option-A/
+│   │   ├── scaffolds.fasta          # Final scaffolds
+│   │   ├── contigs.fasta            # Final contigs
+│   │   ├── assembly_graph.fastg     # Assembly graph
+│   │   ├── spades.log               # Assembly log
+│   │   └── ... (other SPAdes files)
+│   └── option-B/
+│       └── ... (similar structure)
+└── masurca/
+    ├── option-A/
+    │   ├── masurca_config.txt       # MaSurCA config
+    │   ├── assemble.sh              # Generated assembly script
+    │   ├── CA/                      # CABOG assembly results
+    │   ├── flye.mr.*/               # Flye assembly results (if used)
+    │   ├── work1/                   # Intermediate files
+    │   └── ... (other MaSuRCA files)
+    └── option-B/
+        └── ... (similar structure)
+```

@@ -1,0 +1,302 @@
+---
+title: "K-mer Analysis: Genome Characteristics Estimation"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 2
+execute:
+  eval: false
+  echo: true
+---
+
+# K-mer Analysis: Genome Characteristics Estimation
+
+K-mer analysis is a fundamental step in genome assembly workflows that provides crucial insights into genome characteristics before attempting assembly. By analyzing the frequency distribution of k-mers (DNA sequences of length k) in sequencing data, we can estimate important genome properties such as genome size, heterozygosity levels, and repetitive content.
+
+This analysis helps us:
+
+-   **Estimate genome size** independently of assembly quality
+-   **Assess genome complexity** (heterozygosity, repeats)
+-   **Choose optimal k-mer sizes** for assembly algorithms
+-   **Compare preprocessing strategies** (Option A vs Option B)
+
+We'll use **KAT (K-mer Analysis Toolkit)**, a comprehensive suite designed specifically for k-mer frequency analysis in genomic data. KAT generates detailed histograms and statistics that reveal the underlying structure of our sequencing datasets.
+
+## Theoretical Background
+
+### K-mer Frequency Distributions
+
+In an ideal diploid genome with uniform coverage, k-mer frequency distributions typically show:
+
+-   **Peak at 1x coverage**: Heterozygous regions (single-copy k-mers)
+-   **Peak at 2x coverage**: Homozygous regions (double-copy k-mers)
+-   **Higher frequency peaks**: Repetitive elements
+
+The position and shape of these peaks provide quantitative estimates of genome characteristics.
+
+### K-mer Size Selection
+
+Different k-mer sizes reveal different aspects of genome structure:
+
+-   **Small k-mers (5-15)**: Sensitive to sequencing errors, good for error detection
+-   **Medium k-mers (21-31)**: Optimal balance for most genomes
+-   **Large k-mers (35-81)**: Better specificity, useful for complex genomes
+
+## Configuration and Setup
+
+### Environment Variables
+
+We'll continue using the established environment variables from previous chapters:
+
+``` bash
+export SN=tuto482
+export NCPUS=12
+```
+
+### Software Dependencies
+
+KAT requires specific installation due to its specialized k-mer analysis algorithms. We provide three installation approaches consistent with the tutorial framework:
+
+#### Apptainer
+
+``` bash
+alias kat="apptainer run docker://quay.io/biocontainers/kat:2.4.2--py36hc902310_3 kat"
+```
+
+#### Docker
+
+``` bash
+alias kat="docker run --rm -u $UID:$GID -v \$(pwd):/data -w /data quay.io/biocontainers/kat:2.4.2--py36hc902310_3 kat"
+```
+
+#### Conda
+
+``` bash
+# Create environment with KAT
+conda create -n kat-analysis -c bioconda kat
+
+# Activate the environment
+conda activate kat-analysis
+```
+
+### Directory Structure Setup
+
+Create an organized directory structure for k-mer analysis results:
+
+``` bash
+# Create main k-mer analysis directory
+mkdir -p 03-kmer-analysis/{kat,plots,results}
+
+# Create subdirectories for different analysis types
+mkdir -p 03-kmer-analysis/kat/{option-A,option-B}
+```
+
+**Directory structure:**
+
+-   `kat/`: KAT histogram outputs and statistics
+-   `plots/`: Generated visualizations and plots
+-   `results/`: Summary tables and analysis results
+
+## K-mer Frequency Analysis
+
+We'll perform comprehensive k-mer analysis on both preprocessing options (A and B) using all three file types (R1, R2, merged) simultaneously. KAT can process multiple input files in a single command, which is more efficient and provides a combined analysis.
+
+### K-mer Size Range
+
+We'll test a comprehensive range of k-mer sizes: `seq 21 4 39; seq 41 6 71 ; seq 71 10 101`
+
+This range covers:
+
+-   Small k-mers for error assessment
+-   Standard assembly k-mer sizes
+-   Large k-mers for complex genome regions
+
+### Run KAT
+
+We'll analyze all three file types (R1, R2, and merged) together:
+
+``` bash
+for opt in A B; do
+    for k in $(seq 21 4 39; seq 41 6 71 ; seq 71 10 101); do
+        echo "Processing Option $opt (all files) with k-mer size: $k"
+        kat hist \
+            -o 03-kmer-analysis/kat/option-${opt}/hist-k${k} \
+            -H 250000000 \
+            -t $NCPUS \
+            -m $k \
+            -p pdf \
+            02-primary/merged/${SN}-${opt}-illumina*.fastq.gz \
+            > 03-kmer-analysis/kat/option-${opt}/hist-k${k}.out 2>&1
+    done
+done
+```
+
+**KAT parameters explained:**
+
+-   `-o`: Output file prefix
+-   `-H`: Maximum hash table size (250M entries)
+-   `-t`: Number of threads
+-   `-m`: K-mer size
+-   `-p pdf`: Generate PDF plots of histograms
+
+## Results Extraction and Summary
+
+After running all k-mer analyses, we need to extract genome size estimates from the output files and organize them for visualization.
+
+### Extract Genome Size Estimates
+
+``` bash
+# Create results summary file
+echo "Option,KmerSize,GenomeSize" > 03-kmer-analysis/results/genome_size_estimates.csv
+
+# Extract genome size estimates from Option A results
+for opt in A B; do
+    for k in $(seq 21 4 39; seq 41 6 71 ; seq 71 10 101); do
+        if [ -f "03-kmer-analysis/kat/option-${opt}/hist-k${k}.out" ]; then
+            genome_size=$(grep "Estimated genome size" 03-kmer-analysis/kat/option-${opt}/hist-k${k}.out | \
+                        awk '{print $4}' | sed 's/,//g')
+            if [ ! -z "$genome_size" ]; then
+                echo "${opt},${k},${genome_size}" >> 03-kmer-analysis/results/genome_size_estimates.csv
+            fi
+        fi
+    done
+done
+```
+
+## Data Visualization with R and ggplot2
+
+Now we'll create comprehensive visualizations to compare genome size estimates across different k-mer sizes and preprocessing options.
+
+### R Script for Visualization
+
+Create an R script for generating publication-quality plots:
+
+``` r
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(scales)
+library(viridis)
+
+# Set working directory and load data
+data <- read_csv("03-kmer-analysis/results/genome_size_estimates.csv")
+
+# Convert GenomeSize to numeric (handle potential formatting issues)
+data$GenomeSize <- as.numeric(gsub(",", "", data$GenomeSize))
+
+# Create factor levels for proper ordering
+data$Option <- factor(data$Option, levels = c("A", "B"))
+
+# Remove abberant values:
+data <- filter(data, .data$GenomeSize < 80)
+
+# Create a detailed comparison plot
+p1 <- ggplot(data, aes(x = KmerSize, y = GenomeSize, color = Option)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  geom_line(aes(group = Option), size = 1, alpha = 0.7) +
+  geom_smooth(aes(group = Option), method = "loess", se = TRUE, alpha = 0.2) +
+  scale_color_viridis_d(name = "Preprocessing\nOption") +
+  scale_x_continuous(breaks = c(5, 15, 25, 35, 61, 81, 91, 101, 111, 121, 131)) +
+  scale_y_continuous(labels = comma_format()) +
+  labs(title = "Genome Size Estimates with Trend Lines",
+       subtitle = "Smoothed trends showing convergence patterns",
+       x = "K-mer Size",
+       y = "Estimated Genome Size (Mb)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.text = element_text(face = "bold"))
+
+# Save trend plot
+ggsave("03-kmer-analysis/plots/genome_size_trends.png", p1, width = 12, height = 6, dpi = 300)
+ggsave("03-kmer-analysis/plots/genome_size_trends.pdf", p1, width = 12, height = 6)
+```
+
+## Results Interpretation
+
+### Understanding K-mer Frequency Histograms
+
+The generated KAT histograms reveal important genome characteristics:
+
+1.  **Error Peak (low frequency)**: K-mers appearing once, often due to sequencing errors
+2.  **Heterozygous Peak**: K-mers from heterozygous regions (single-copy)
+3.  **Homozygous Peak**: K-mers from homozygous regions (double-copy)
+4.  **Repetitive Peaks**: Higher frequency peaks indicating repetitive elements
+
+### Genome Size Estimation Accuracy
+
+Genome size estimates should:
+
+-   **Converge** across different k-mer sizes (21-31 range)
+-   **Show consistency** between preprocessing options
+-   **Reflect the combined information** from all read types
+
+### Optimal K-mer Size Selection
+
+For downstream assembly, consider:
+
+-   **K-mer sizes 21-31**: Generally optimal for most genomes
+-   **Stable estimates**: Choose k-mer sizes with consistent genome size estimates
+-   **Assembly algorithm requirements**: Some assemblers have preferred k-mer ranges
+
+### Preprocessing Strategy Comparison
+
+Compare Option A vs Option B:
+
+-   **Data retention**: Option A typically retains more data
+-   **Quality improvement**: Option B provides higher quality reads
+-   **Genome size consistency**: Both should give similar estimates if preprocessing is effective
+
+## Expected Outcomes
+
+After completing the k-mer analysis, you should have:
+
+``` bash
+03-kmer-analysis/
+├── kat/
+│   ├── option-A/
+│   │   ├── hist-k5.out, hist-k5.dist, hist-k5.dist.pdf
+│   │   ├── hist-k9.out, hist-k9.dist, hist-k9.dist.pdf
+│   │   └── ... (for all k-mer sizes)
+│   └── option-B/
+│       ├── hist-k5.out, hist-k5.dist, hist-k5.dist.pdf
+│       ├── hist-k9.out, hist-k9.dist, hist-k9.dist.pdf
+│       └── ... (for all k-mer sizes)
+├── plots/
+│   ├── visualize_kmer_analysis.R
+│   ├── genome_size_vs_kmer.png
+│   ├── genome_size_vs_kmer.pdf
+│   ├── genome_size_trends.png
+│   └── genome_size_trends.pdf
+└── results/
+    ├── genome_size_estimates.csv
+    ├── summary_statistics.csv
+    ├── optimal_kmer_recommendations.csv
+    └── option_comparison.csv
+```
+
+### Key Metrics to Examine
+
+1.  **Genome size estimates**: Should be consistent across k-mer sizes 21-31
+2.  **Preprocessing effects**: Compare Option A vs B impact on estimates
+3.  **Convergence patterns**: Look for stable estimates in the optimal k-mer range
+4.  **Optimal k-mer selection**: Identify stable k-mer sizes for assembly
+
+## Next Steps
+
+With comprehensive k-mer analysis complete, you're ready to proceed to:
+
+1.  **Hybrid genome assembly** using optimal k-mer sizes identified
+2.  **Assembly parameter optimization** based on genome characteristics
+3.  **Quality assessment** comparing assembly results with k-mer predictions
+
+The k-mer analysis provides crucial baseline metrics that will help evaluate assembly success and guide parameter selection for downstream analysis steps.
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**Memory errors**: Reduce hash table size (`-H` parameter) or use smaller k-mer sizes first **Missing genome size estimates**: Check KAT output files for errors or warnings **Inconsistent estimates**: May indicate contamination or highly heterozygous regions **R visualization errors**: Ensure all required packages are installed:
+
+``` bash
+R -e "install.packages(c('ggplot2', 'dplyr', 'readr', 'scales', 'viridis'))"
+```
