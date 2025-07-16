@@ -11,7 +11,8 @@ execute:
 
 In this tutorial, we will download publicly available genomic datasets from the NCBI Sequence Read Archive (SRA). This is a common first step in genomic analysis workflows, allowing researchers to access high-quality sequencing data for comparative studies or method development.
 
-We have selected [PRJNA721899](https://www.ebi.ac.uk/ena/browser/view/PRJNA721899) in which 6 differently virulent strains of *Fusarium oxysporum* f. sp. *lini* were sequenced using both Illumina (short-read) and Oxford Nanopore (long-read) technologies. This dual-platform approach provides complementary data types ideal for hybrid genome assembly.
+We have selected [PRJNA721899](#0) in which 6 differently virulent strains of *use QUAST for eval.\
+*were sequenced using both Illumina (short-read) and Oxford Nanopore (long-read) technologies. This dual-platform approach provides complementary data types ideal for hybrid genome assembly.
 
 We will focus on sample [SAMN13621855](https://www.ebi.ac.uk/ena/browser/view/SAMN13621855?show=reads) which corresponds to strain 482, a pathogenic isolate that will serve as our model organism for this de novo genome assembly tutorial.
 
@@ -94,7 +95,6 @@ rm -rf $SRR_ILLUMINA
 mkdir -p 01-rawdata/
 mv ${SRR_ILLUMINA}_1.fastq.gz 01-rawdata/$SN-illumina_R1.fastq.gz
 mv ${SRR_ILLUMINA}_2.fastq.gz 01-rawdata/$SN-illumina_R2.fastq.gz
-
 ```
 
 > Note that this time, as the next, can be long to run; especially with a slow bandwidth.
@@ -122,7 +122,7 @@ mv ${SRR_NANOPORE}.fastq.gz 01-rawdata/$SN-nanopore.fastq.gz
 
 **Expected output:** A single compressed FASTQ file containing Oxford Nanopore long reads, stored in the `01-rawdata/` directory.
 
-## Expected outputs 
+## Expected outputs
 
 ``` bash
 ls -lh 01-rawdata

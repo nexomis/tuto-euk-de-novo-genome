@@ -1,7 +1,9 @@
 ---
 title: "Primary Analysis: Quality Control and Preprocessing"
 author: Julien Fouret
-format: html
+format: 
+  html:
+    number-offset: 1
 execute:
   eval: false
   echo: true
@@ -306,7 +308,7 @@ rm k2_pluspf_08gb_20250402.tar.gz
 cd ../../..
 ```
 
-> Note that we are using a capped database limited to 8Gb (in place of ~70). Therefore sensitivity will not be the best. In real world scenario it's recommended to use the complete database.
+> Note that we are using a capped database limited to 8Gb (in place of \~70). Therefore sensitivity will not be the best. In real world scenario it's recommended to use the complete database.
 
 ### Subsampling with seqtk
 

@@ -1,7 +1,9 @@
 ---
 title: "Hybrid Assembly: SPAdes and MaSuRCA"
 author: Julien Fouret
-format: html
+format: 
+  html:
+    number-offset: 3
 execute:
   eval: false
   echo: true
@@ -238,7 +240,6 @@ Use the MaSuRCA configuration to generate the assembly script:
 # Generate MaSuRCA assembly script for Option A
 export opt=A
 masurca_apptainer bash -c "cd 04-assembly/masurca/option-${opt} ; masurca masurca_config.txt"
-
 ```
 
 ### Execute Assembly
@@ -261,16 +262,16 @@ For comparison, create and run MaSuRCA assembly with Option B data.
 
 Key metrics to examine:
 
-**Contiguity metrics:** 
+**Contiguity metrics:**
 
-- **Number of contigs**: Fewer contigs generally indicate better assembly 
-- **N50**: Length of the contig at which 50% of the assembly is contained in contigs of this size or larger 
-- **Largest contig**: Indicates ability to resolve long genomic regions
+-   **Number of contigs**: Fewer contigs generally indicate better assembly
+-   **N50**: Length of the contig at which 50% of the assembly is contained in contigs of this size or larger
+-   **Largest contig**: Indicates ability to resolve long genomic regions
 
-**Completeness indicators:** 
+**Completeness indicators:**
 
-- **Total assembly size**: Should approximate expected genome size from k-mer analysis
-- **Coverage representation**: All major genomic regions should be represented
+-   **Total assembly size**: Should approximate expected genome size from k-mer analysis
+-   **Coverage representation**: All major genomic regions should be represented
 
 > **Note**: Comprehensive assembly evaluation using QUAST, BUSCO, and other tools will be covered in Chapter 5.
 

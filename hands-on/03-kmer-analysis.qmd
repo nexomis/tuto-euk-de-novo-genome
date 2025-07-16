@@ -1,7 +1,9 @@
 ---
 title: "K-mer Analysis: Genome Characteristics Estimation"
 author: Julien Fouret
-format: html
+format: 
+  html:
+    number-offset: 2
 execute:
   eval: false
   echo: true
@@ -293,10 +295,7 @@ The k-mer analysis provides crucial baseline metrics that will help evaluate ass
 
 ### Common Issues and Solutions
 
-**Memory errors**: Reduce hash table size (`-H` parameter) or use smaller k-mer sizes first
-**Missing genome size estimates**: Check KAT output files for errors or warnings
-**Inconsistent estimates**: May indicate contamination or highly heterozygous regions
-**R visualization errors**: Ensure all required packages are installed:
+**Memory errors**: Reduce hash table size (`-H` parameter) or use smaller k-mer sizes first **Missing genome size estimates**: Check KAT output files for errors or warnings **Inconsistent estimates**: May indicate contamination or highly heterozygous regions **R visualization errors**: Ensure all required packages are installed:
 
 ``` bash
 R -e "install.packages(c('ggplot2', 'dplyr', 'readr', 'scales', 'viridis'))"

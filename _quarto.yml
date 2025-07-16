@@ -46,8 +46,10 @@ website:
             href: hands-on/03-kmer-analysis.qmd
           - text: "Hybrid Assembly (SPAdes/MaSuRCA)"
             href: hands-on/04-hybrid-assembly-spades-masurca.qmd
-          - text: "Assembly Evaluation with QUAST"
-            href: hands-on/05-assembly-evaluation-quast.qmd
+          - text: "Assembly Evaluation"
+            href: hands-on/05-assembly-evaluation.qmd
+          - text: "Secondary scaffolding"
+            href: hands-on/06-scaffolding.qmd
     right:
       - href: about.qmd
         text: About

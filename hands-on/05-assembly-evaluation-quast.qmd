@@ -1,7 +1,0 @@
----
-title: "Assembly Evaluation with QUAST"
----
-
-# Assembly evaluation with QUAST
-
-Content for Assembly evaluation with QUAST.

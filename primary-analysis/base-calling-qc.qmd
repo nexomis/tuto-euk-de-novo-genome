@@ -1,22 +1,21 @@
 ---
 title: "Base Calling & QC"
+bibliography: base-calling-qc.bib
 ---
 
 # Base Calling and Reads Quality Control
 
 ## Fundamentals
 
-Sanger Sequencing is the first game-changing sequencing method, it was developed in the 1970s and was used to sequence the first human genome in 2001. Sanger sequencing is a chain termination method, it uses a mixture of dNTPs and ddNTPs to terminate the DNA synthesis at a random position.
+Sanger Sequencing is the first game-changing sequencing method, it was developed in the 1970s [@sangerDNASequencingChainterminating1977] and was used to sequence the first human genome in 2001. Sanger sequencing is a chain termination method, it uses a mixture of dNTPs and ddNTPs to terminate the DNA synthesis at a random position [@sangerDNASequencingChainterminating1977].
 
 ![Sanger sequencing](base-calling-qc/sanger-seq.excalidraw.svg)
 
 As show on the figure above, Sanger sequencing will produce multiple fragments of DNA, each of which is a different length. The introduction of ddNTP will stop the DNA synthesis at a random position that match the base of the ddNTP. Later the fragments are separated by their length using gel electrophoresis. Reading each column in the gel will give the sequence of the DNA. The process is optimized with the use of fluorescent dyes that are incorporated into the DNA where only one reaction is enough the the sequence is interpreted based on the color.
 
-> **TODO** add a figure of the gel electrophoresis **TODO** add a ref
-
 ## Introduction to Second Generation Sequencing
 
-The Second generation Sequencing (SGS) is a method of sequencing DNA. While Sanger sequencing is a chain termination method, SGS is **a** sequencing by synthesis method.
+The Second generation Sequencing (SGS) is a method of sequencing DNA. While Sanger sequencing is a chain termination method, SGS is a sequencing by synthesis method.
 
 This process was further industrialized by the use of capillary electrophoresis to separate the fragments as known today as Sanger sequencing.
 
@@ -28,15 +27,11 @@ The signal read not on a single template but on a large number of templates simu
 
 This process was industrialized by companies such as Illumina where templates are deposited on a flowcell where a clustering process allow the forming of cluster for optimal signal acquisition.
 
-![Illumina Technology](base-calling-qc/illumina-tech.excalidraw.svg)
-
-> REF: https://www.illumina.com/documents/products/techspotlights/techspotlight_sequencing.pdf
+![Illumina Technology from https://www.illumina.com/documents/products/techspotlights/techspotlight_sequencing.pdf](base-calling-qc/illumina-tech.excalidraw.svg)
 
 So basically the sequencing process is based on Image Analysis. In addition to the base calling, the image analysis also allows to determine the quality of the sequencing. To this end both the cluster intensity and the signal-to-noise ratio are exploited to estimated a quality score. The quality score is a Phred score (log10 of the probability of error) and is reported for each base. As shown below the Quality score is a prediction made from the sequencing of known sequences.
 
-![Q-score correlation with error rate](base-calling-qc/q-cor.png)
-
-> REF: https://knowledge.illumina.com/instrumentation/general/instrumentation-general-reference_material-list/000006557
+![Q-score correlation with error rate from https://knowledge.illumina.com/instrumentation/general/instrumentation-general-reference_material-list/000006557](base-calling-qc/q-cor.png)
 
 It's interesting to not that since, Illumina developed less expensive technology based on a double channel chemistry with only 2 dye for the 4 bases - and even a single channel chemistry. Nonetheless the methods might induce artefacts such as polyG tails at the end of reads due to the absence of base for short fragments.
 
@@ -58,19 +53,26 @@ Depending on library size then can be different issues: 1. In case of too short 
 
 ### DNA Library Preparation in SGS
 
-The DNA library preparation is a critical step. Important criteria are: - The fragmentation method - The fragment size - The Amplification method
+The DNA library preparation is a critical step. Important criteria are:
 
-> TODO add an example of library preparation workflow
+-   The fragmentation method
+-   The fragment size (higher the better)
+-   The Amplification method (Amplification-free is better)
 
 ## Third generation sequencing
 
-The third generation of sequencing focuses on both long read sequencing and direct DNA sequencing (without prior library preparation, for Epigenetics not covered here).
+The third generation of sequencing focuses on both long read sequencing and direct DNA sequencing (without prior library preparation, for Epigenetics not covered here) [@vandijkThirdRevolutionSequencing2018].
 
-Nowdays there are 2 leading provider for long read sequencing:
+Nowdays there are 2 leading provider for long read sequencing [@langComparisonTwoUptodate2020]:
 
-PacBio (Pacific Biosciences) TGS Sequencing: - Uses Single Molecule Real-Time (SMRT) technology - DNA synthesis detected by fluorescent labels in real time - Generates long, high-accuracy reads (\>10 kb, especially with HiFi mode) - Well-suited for full-length transcript sequencing, genome assembly, and detecting structural variants
+**PacBio (Pacific Biosciences) TGS Sequencing**:
 
-Oxford Nanopore TGS Sequencing:
+-   Uses Single Molecule Real-Time (SMRT) technology
+-   DNA synthesis detected by fluorescent labels in real time
+-   Generates long, high-accuracy reads (\>10 kb, especially with HiFi mode)
+-   Well-suited for full-length transcript sequencing, genome assembly, and detecting structural variants
+
+**Oxford Nanopore TGS Sequencing**:
 
 -   DNA passes through a protein nanopore, changing electrical current
 -   Measures current changes to directly read DNA sequence in real time
@@ -79,15 +81,35 @@ Oxford Nanopore TGS Sequencing:
 
 Of note there are also other technologies to obtain long reads such as True Synthetic Long Reads (TSLR), not covered here.
 
-XXX Add schematic of the two technologies
-
 ### Nanopore Base Calling
 
-XXX TODO - Add Graphics regarding the banchmarking of basecalling
+Nanopore base calling is fundamentally different from other sequencing technologies as it directly reads DNA sequences through changes in electrical current as nucleotides pass through protein nanopores. The base calling accuracy has improved significantly with advances in both hardware and computational algorithms. Various base calling tools have been developed and benchmarked to optimize accuracy and speed [@wickComparisonOxfordNanopore2018], with newer neural network-based approaches showing substantial improvements over earlier methods.
 
 ## Current sequencing errors type and rate per sequencing techno
 
-TODO
+Different sequencing technologies exhibit distinct error profiles and biases [@rossCharacterizingMeasuringBias2013]:
+
+**Illumina (Second Generation):**
+
+-   Substitution errors are most common (\~0.1-1% error rate)
+-   GC bias affects coverage uniformity 
+-   Quality degrades toward the end of reads
+-   Context-specific errors in homopolymers
+
+**PacBio (Third Generation):**
+
+-   Higher overall error rate (10-15%) but randomly distributed
+-   Mainly insertion and deletion errors
+-   Minimal GC bias compared to short-read technologies 
+-   HiFi mode significantly improves accuracy
+
+**Oxford Nanopore (Third Generation):**
+
+-   Variable error rates (5-15%) depending on base calling algorithms [@wickComparisonOxfordNanopore2018]
+-   Primarily indel errors, especially in homopolymer regions
+-   Systematic errors can be reduced with improved base calling
+
+Understanding these error profiles is crucial for downstream analysis and quality control.
 
 ## How to get DNA for sequencing
 
@@ -105,4 +127,4 @@ The DNA extraction is a critical step. It's important to use a protocol that is 
 
 ## QCs
 
-To see how QC is done, look at the QC hands on pratice (TODO add ref).
+To see how QC is done, look at the QC hands on pratice.
