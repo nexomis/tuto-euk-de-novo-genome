@@ -53,6 +53,8 @@ website:
             href: hands-on/05-assembly-evaluation.qmd
           - text: "Secondary scaffolding"
             href: hands-on/06-scaffolding.qmd
+          - text: "Repeats Annotation and Masking"
+            href: hands-on/07-repeats-analysis.qmd
     right:
       - href: about.qmd
         text: About

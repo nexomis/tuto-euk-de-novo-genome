@@ -92,7 +92,7 @@ Different sequencing technologies exhibit distinct error profiles and biases [@r
 **Illumina (Second Generation):**
 
 -   Substitution errors are most common (\~0.1-1% error rate)
--   GC bias affects coverage uniformity 
+-   GC bias affects coverage uniformity
 -   Quality degrades toward the end of reads
 -   Context-specific errors in homopolymers
 
@@ -100,7 +100,7 @@ Different sequencing technologies exhibit distinct error profiles and biases [@r
 
 -   Higher overall error rate (10-15%) but randomly distributed
 -   Mainly insertion and deletion errors
--   Minimal GC bias compared to short-read technologies 
+-   Minimal GC bias compared to short-read technologies
 -   HiFi mode significantly improves accuracy
 
 **Oxford Nanopore (Third Generation):**

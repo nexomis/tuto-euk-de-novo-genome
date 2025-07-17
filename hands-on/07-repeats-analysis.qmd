@@ -1,0 +1,409 @@
+---
+title: "Repeats Analysis with RepeatMasker"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 6
+execute:
+  eval: false
+  echo: true
+---
+
+# Repeats Analysis with RepeatMasker
+
+In this chapter, we will perform repeat analysis on our assembled genome. Repetitive elements are a major component of eukaryotic genomes and their identification is a crucial step before gene annotation. We will use RepeatMasker, a widely used tool for identifying and classifying repetitive elements.
+
+## Introduction to RepeatMasker
+
+RepeatMasker is a program that screens DNA sequences for interspersed repeats and low complexity DNA sequences. The output of the program is a detailed annotation of the repeats that are present in the query sequence as well as a modified version of the query sequence in which all the annotated repeats have been masked.
+
+RepeatMasker relies on a library of repeat sequences. We will use Dfam, a database of transposable element profile HMM models and consensus sequences.
+
+## Objectives
+
+The primary objective of this chapter is to **mask repetitive elements** in our assembled genome to prepare it for downstream gene annotation. Repeat masking is essential because:
+
+1.  **Gene prediction accuracy**: Unmasked repeats can lead to false gene predictions, as gene-finding algorithms may incorrectly identify repetitive sequences as exons or coding regions.
+
+2.  **Annotation quality**: Proper repeat masking ensures that gene annotation tools focus on genuine gene sequences rather than being confused by repetitive elements.
+
+3.  **Comparative analysis**: Masked genomes provide cleaner datasets for comparative genomics and phylogenetic analyses.
+
+**Important note**: While we will use RepeatModeler to identify *de novo* repeat families, our primary goal is **comprehensive genome masking** rather than the discovery of novel transposable elements. The RepeatModeler step ensures we capture species-specific repeats that may not be present in curated databases like Dfam, thereby improving the completeness of our repeat masking.
+
+## Configuration and Setup
+
+### Environment Variables
+
+We'll continue using the established environment variables:
+
+``` bash
+export NCPUS=12
+export NPA=$(echo $NCPUS/4 | bc)
+export SN=Fo47
+```
+
+### Software Dependencies
+
+Installing RepeatMasker and all its dependencies can be complex. To simplify this process, we will use a pre-built Apptainer/Docker container from the Dfam consortium, which includes RepeatMasker, RepeatModeler, and all necessary dependencies.
+
+We will use the `dfam/tetools` container.
+
+#### Apptainer
+
+We will use an alias for the Apptainer command to simplify its usage.
+
+``` bash
+alias tetools="apptainer run docker://dfam/tetools:latest"
+```
+
+## Data Preparation
+
+### Download Assembly
+
+We will use a Fusarium assembly from NCBI as the input for our repeat analysis.
+
+``` bash
+mkdir -p 07-repeats-analysis/assembly
+wget -P 07-repeats-analysis/assembly https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_ASM1308505v1_genomic.fna.gz
+gunzip 07-repeats-analysis/assembly/GCF_013085055.1_ASM1308505v1_genomic.fna.gz
+```
+
+Now we'll process the assembly file to ensure all sequence lines are in uppercase and rename it appropriately:
+
+``` python
+#!/usr/bin/env python3
+import os
+
+# Process the assembly file: convert sequences to uppercase and rename
+input_file = "07-repeats-analysis/assembly/GCF_013085055.1_ASM1308505v1_genomic.fna"
+output_file = f"07-repeats-analysis/assembly/{os.getenv('SN')}.fasta"
+
+with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+    for line in infile:
+        if line.startswith('>'):
+            outfile.write(line)
+        else:
+            outfile.write(line.upper())
+
+# Remove the original file
+os.remove(input_file)
+```
+
+### Prepare RepeatMasker Libraries
+
+RepeatMasker requires a library of repeat sequences. We will use the Dfam database. Since we are analyzing a fungal genome, we will download the Dfam partition for fungi.
+
+According to the Dfam [README](https://www.dfam.org/releases/current/families/FamDB/README.txt), partition 16 contains Fungi.
+
+``` bash
+mkdir -p 07-repeats-analysis/libraries/famdb
+wget -P 07-repeats-analysis/libraries/famdb https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz
+wget -P 07-repeats-analysis/libraries/famdb https://www.dfam.org/releases/current/families/FamDB/dfam39_full.16.h5.gz
+gunzip 07-repeats-analysis/libraries/famdb/*.gz
+```
+
+The `tetools` container comes with a minimal library. To use our custom library, we need to create a local `Libraries` directory and bind-mount it into the container. This approach avoids the NFS mounting issues that can occur with writable sandboxes.
+
+First, let's copy the original libraries from the container to our host system to have a proper structure:
+
+``` bash
+mkdir -p 07-repeats-analysis/RepeatMasker
+tetools bash -c "cp -r /opt/RepeatMasker/Libraries 07-repeats-analysis/RepeatMasker/"
+```
+
+Now, move our downloaded Dfam partitions into the local `famdb` directory:
+
+``` bash
+ln -f 07-repeats-analysis/libraries/famdb/*.h5 07-repeats-analysis/RepeatMasker/Libraries/famdb/
+```
+
+## De Novo Repeat Identification with RepeatModeler
+
+Before running RepeatMasker with the curated Dfam library, we should first identify species-specific repeats using RepeatModeler. RepeatModeler builds a custom repeat library from our assembly using *de novo* repeat identification methods. This is particularly important for organisms that may have novel repeat families not present in existing databases.
+
+### Build RepeatModeler Database
+
+First, we need to create a database for RepeatModeler from our assembly:
+
+``` bash
+mkdir -p 07-repeats-analysis/repeatmodeler
+tetools BuildDatabase -name ${SN} 07-repeats-analysis/assembly/${SN}.fasta
+```
+
+**BuildDatabase parameters explained:** - `-name`: Database name (we use our sample identifier) - Positional argument: Input assembly file
+
+### Run RepeatModeler
+
+Now we can run RepeatModeler to identify *de novo* repeat families. This process can take several hours to days depending on genome size and complexity:
+
+``` bash
+tetools RepeatModeler \
+  -database ${SN} \
+  -threads $NCPUS \
+  -LTRStruct \
+  > 07-repeats-analysis/repeatmodeler/${SN}_repeatmodeler.log 2>&1
+```
+
+**RepeatModeler parameters explained:**
+- `-database`: Name of the database created with BuildDatabase
+- `-threads`: Number of parallel processes
+- `-LTRStruct`: Enable LTR structural analysis for better LTR identification
+
+### RepeatModeler Output
+
+RepeatModeler creates several output files in a timestamped directory (e.g., `RM_YYYYMMDD-HHMMSS`). The key output files include:
+
+-   `${SN}-families.fa`: **Main output** - FASTA file containing consensus sequences of identified repeat families
+-   `${SN}-families.stk`: Stockholm format alignment file
+-   `${SN}-rmod.log`: Detailed log of the RepeatModeler run
+
+Move the results to our organized directory structure:
+
+``` bash
+# Move RepeatModeler results to our analysis directory
+mv ${SN}-families.fa 07-repeats-analysis/repeatmodeler/
+mv ${SN}-families.stk 07-repeats-analysis/repeatmodeler/
+mv ${SN}-rmod.log 07-repeats-analysis/repeatmodeler/
+mv RM_* 07-repeats-analysis/repeatmodeler/
+rm ${SN}.*
+```
+
+### Examine RepeatModeler Results
+
+You can examine the identified repeat families:
+
+``` bash
+# Count the number of repeat families identified
+grep -c ">" 07-repeats-analysis/repeatmodeler/${SN}-families.fa
+
+# Look at the first few families
+head -20 07-repeats-analysis/repeatmodeler/${SN}-families.fa
+```
+
+The headers contain classification information when available (e.g., `>rnd-1_family-174#LINE/L1`) or `#Unknown` for unclassified elements.
+
+### Combine Dfam Database with Custom Library
+
+Since the `-lib` and `-species` options are not compatible, we need to create a combined library that includes both the Dfam fungi sequences and our RepeatModeler-generated families. We'll use the `famdb.py` tool to extract fungi sequences from our downloaded famdb files.
+
+First, extract fungi sequences from the Dfam database using famdb.py:
+
+``` bash
+# Extract fungi sequences from Dfam using famdb.py
+tetools_lib famdb.py -i /opt/RepeatMasker/Libraries/famdb \
+  families --format fasta_name --ancestors --descendants 'Fungi' \
+  --include-class-in-name > 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa
+```
+
+Now combine the Dfam fungi sequences with our RepeatModeler families:
+
+``` bash
+# Create combined library
+cat 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa \
+    07-repeats-analysis/repeatmodeler/${SN}-families.fa \
+    > 07-repeats-analysis/RepeatMasker/Libraries/${SN}_combined.fa
+```
+
+This combined approach provides: 
+
+1. **Curated fungi repeats** from the Dfam database 
+2. **Novel, species-specific repeats** identified by RepeatModeler 
+3. **Full compatibility** with RepeatMasker's `-lib` option
+
+## Running RepeatMasker with Database Only
+
+Before using the combined library, let's first run RepeatMasker using only the Dfam database to see how much repetitive content can be identified with curated repeats alone. This will help us understand the contribution of the *de novo* RepeatModeler families.
+
+### Execute RepeatMasker with Dfam Only
+
+Run RepeatMasker using only the species-specific Dfam database:
+
+``` bash
+tetools_lib RepeatMasker \
+  -a \
+  -pa $NPA \
+  -species fungi \
+  -dir 07-repeats-analysis/rm_out_dfam_only \
+  -gff \
+  07-repeats-analysis/assembly/${SN}.fasta > 07-repeats-analysis/rm_out_dfam_only.log
+```
+
+### Expected Results
+
+With the Dfam database alone, you should expect to see:
+
+-   **Repeat content** (\~1% or less) for this Fusarium assembly
+-   **Limited identification** of known repeat families
+-   **Gaps** in repeat annotation due to species-specific repeats not present in Dfam
+
+This demonstrates why *de novo* repeat identification with RepeatModeler is crucial for comprehensive repeat annotation, especially for organisms that may have novel or poorly characterized repeat families.
+
+## Running RepeatMasker with Combined Libraries
+
+To run RepeatMasker with our custom libraries, we will use bind mounts. This approach mounts our local `Libraries` directory over the container's `/opt/RepeatMasker/Libraries` directory, making our custom Dfam files available to RepeatMasker without requiring a writable container.
+
+### Library Reconfiguration
+
+First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We'll use a bind mount to provide our custom libraries to the container and run the update script:
+
+``` bash
+BIND="--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
+alias tetools_lib="apptainer run $BIND docker://dfam/tetools:latest"
+tetools_lib bash -c "rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config && cd /opt/RepeatMasker && ./tetoolsDfamUpdate.pl"
+```
+
+This command: - Binds our local `Libraries` directory to `/opt/RepeatMasker/Libraries` in the container - Removes any existing configuration file - Runs the update script to generate a new configuration based on our custom libraries
+
+### Execute RepeatMasker
+
+Now we can run RepeatMasker on our assembly, again using the bind mount to provide our custom libraries:
+
+``` bash
+tetools_lib RepeatMasker \
+  -a \
+  -pa $NPA \
+  -lib /opt/RepeatMasker/Libraries/${SN}_combined.fa \
+  -dir 07-repeats-analysis/rm_out \
+  -gff \
+  07-repeats-analysis/assembly/${SN}.fasta > 07-repeats-analysis/rm_out.log
+# alternatively but longerto run, we can use -lib /opt/RepeatMasker/Libraries/${SN}_combined.fa
+```
+
+**RepeatMasker parameters explained:**
+
+-   `-a`: Show alignments
+
+-   `-pa`: Number of parallel processes (threads = pa * 4).
+
+-   `-species`: Specifies the species or group for which to search repeats. This helps in selecting the appropriate repeat library from Dfam. (not compatible with -lib)
+
+-   `-lib`: Custom repeat library file (our RepeatModeler-generated families).
+
+-   `-dir`: Output directory for the results.
+
+-   `-gff`: Output a GFF file in addition to the standard output.
+
+    Positional argument: The input assembly file.
+
+This ensures comprehensive repeat annotation using both existing knowledge and *de novo* discoveries.
+
+## Visualizing RepeatMasker Results
+
+RepeatMasker provides several built-in utilities for visualizing repeat content, and the output can also be used with various genome browsers and custom analysis tools.
+
+### Built-in RepeatMasker Visualization Tools
+
+RepeatMasker includes utilities for creating repeat landscape plots that show the evolutionary age and abundance of different repeat families.
+
+#### Generate Repeat Landscape
+
+The repeat landscape shows the relationship between repeat divergence (evolutionary age) and abundance:
+
+``` bash
+# Generate divergence data
+tetools_lib calcDivergenceFromAlign.pl \
+  -s 07-repeats-analysis/rm_out/${SN}.fasta.divsum \
+  07-repeats-analysis/rm_out/${SN}.fasta.align
+
+# Create repeat landscape plot
+tetools_lib createRepeatLandscape.pl \
+  -g 50400000 \
+  -div 07-repeats-analysis/rm_out/${SN}.fasta.divsum \
+  > 07-repeats-analysis/rm_out/${SN}_repeat_landscape.html
+```
+
+This creates an HTML file with an interactive repeat landscape plot.
+
+### Genome Browser Visualization
+
+The GFF output can be directly loaded into genome browsers for visual inspection:
+
+#### Using IGV (Integrative Genomics Viewer)
+
+1.  Load your assembly (`${SN}.fasta`) as the reference genome
+2.  Load the RepeatMasker GFF file (`${SN}.fasta.out.gff`) as an annotation track
+3.  Navigate through the genome to examine repeat distribution
+
+### Summary Statistics
+
+The `.tbl` file provides a comprehensive summary of repeat content:
+
+``` bash
+# View the repeat summary table
+cat 07-repeats-analysis/rm_out/${SN}.fasta.tbl
+```
+
+This table shows: - Total repeat content percentage - Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.) - Interspersed repeats vs. small RNA - Low complexity and simple repeat content
+
+## Understanding RepeatMasker Output Metrics
+
+### Kimura Substitution Level
+
+The Kimura substitution level (also called Kimura distance or K2P distance) is a measure of evolutionary divergence between the identified repeat and its consensus sequence in the database. It represents the estimated percentage of nucleotide substitutions that have occurred since the repeat was originally inserted into the genome.
+
+**Key points about Kimura substitution levels:**
+
+-   **Low values (0-5%)**: Recent insertions, relatively unchanged from the original sequence
+-   **Medium values (5-20%)**: Moderately aged repeats with accumulated mutations
+-   **High values (\>20%)**: Ancient repeats that have significantly diverged from their original sequence
+
+The Kimura distance accounts for: - Transition mutations (A↔G, C↔T) occurring more frequently than transversions - Multiple substitutions at the same position (back-mutations) - Saturation effects in highly diverged sequences
+
+### Why Genome Percentages Can Exceed 100%
+
+In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:
+
+**1. Overlapping Annotations:** - Different repeat families may overlap in the same genomic region - Nested transposable elements (one inserted within another) - RepeatMasker reports each identified repeat separately, even if they overlap
+
+**2. Fragmented Repeat Detection:** - Large repeats broken by mutations may be detected as multiple smaller fragments - Each fragment contributes to the total count - The sum of fragments may exceed the actual genomic space occupied
+
+**3. Reference vs. Assembly Differences:** - Percentages are calculated relative to the **assembly size**, not the "true" genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated
+
+**4. Calculation Method:** RepeatMasker calculates percentages as:
+
+```         
+Percentage = (Total bp of identified repeats / Assembly size) × 100
+```
+
+The "Total bp of identified repeats" includes all overlapping regions, which can exceed the actual physical space occupied.
+
+**Interpreting the Results:** - Focus on **relative proportions** between repeat classes rather than absolute percentages - Use the **masked assembly** to see the actual genomic regions covered by repeats - Consider the **non-redundant repeat content** for more accurate genome composition estimates
+
+## RepeatMasker Approaches: `-species` vs. `famdb.py/-lib`
+
+RepeatMasker offers different strategies for accessing repeat libraries, each with distinct advantages and coverage levels:
+
+### `-species` Approach (Narrow Coverage)
+
+The `-species fungi` option uses RepeatMasker's built-in species-specific filtering: - **Curated selection**: RepeatMasker selects only well-characterized repeats specific to the taxonomic group - **Conservative approach**: Focuses on high-confidence, validated repeat families - **Limited coverage**: May miss divergent or poorly characterized repeats - **Expected result**: \~1% repeat content for Fusarium (minimal coverage)
+
+### `famdb.py` with `--ancestors --descendants` (Broad Coverage)
+
+Using `famdb.py` to extract repeats allows more comprehensive library construction: - **Taxonomic breadth**: Includes repeats from ancestral and descendant taxonomic groups - **Comprehensive coverage**: Captures more divergent repeat families that may be present - **Custom control**: Allows fine-tuning of taxonomic scope - **Expected result**: Higher repeat detection rate (not tested in this tutorial, but likely \>5%)
+
+### Combined Approach: Dfam + RepeatModeler
+
+The most comprehensive strategy combines curated and *de novo* identified repeats: - **Dfam coverage**: Curated, well-characterized repeat families via `famdb.py` - **Species-specific coverage**: Novel repeats identified by RepeatModeler - **Maximum sensitivity**: Captures both known and novel repetitive elements - **Expected result**: \~11% repeat content (most comprehensive masking)
+
+## Expected Repeat Content Results
+
+Based on different RepeatMasker approaches, expected repeat content for this Fusarium assembly:
+
+**Tested approaches:** - **Using Dfam database alone** (narrow with `-species fungi` option): \~1% repeat content (limited coverage) - **Using *de novo* identified repeats only** (RepeatModeler families): \~6% repeat content - **Using combined approach** (Dfam via `famdb.py` with ancestors/descendants + RepeatModeler): \~11% repeat content (comprehensive masking)
+
+**Not tested but expected:** - **Using Dfam only** (broad via `famdb.py` with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)
+
+The progression from 1% → 6% → 11% demonstrates the importance of combining curated databases with *de novo* repeat identification for comprehensive genome masking before gene annotation.
+
+## File Outputs and Organization
+
+After RepeatMasker finishes, the `07-repeats-analysis/rm_out` directory will contain the results of the repeat analysis, including:
+
+-   `*.masked`: The input sequence with repeats masked (replaced by 'N's).
+-   `*.out`: A detailed annotation of the repeats found.
+-   `*.tbl`: A summary table of the repeat content.
+-   `*.gff`: The repeat annotations in GFF format.
+-   `*.align`: Alignment details for repeat matches (if generated).
+-   `*.divsum`: Divergence summary (after running calcDivergenceFromAlign.pl).
+-   `*_repeat_landscape.html`: Interactive repeat landscape plot (if generated).
