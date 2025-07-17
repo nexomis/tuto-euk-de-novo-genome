@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Julien Fouret">
+
+<title>Repeats Analysis with RepeatMasker – De Novo Genome Assembly Tutorial</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-3fced2653c1411365395c6308d7f7025.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">De Novo Genome Assembly Tutorial</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-primary-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Primary Analysis</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-primary-analysis">    
+        <li>
+    <a class="dropdown-item" href="../primary-analysis/base-calling-qc.html">
+ <span class="dropdown-text">Base Calling &amp; QC</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../primary-analysis/preliminary-analysis.html">
+ <span class="dropdown-text">Preliminary Analysis</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-secondary-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Secondary Analysis</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-secondary-analysis">    
+        <li>
+    <a class="dropdown-item" href="../secondary-analysis/concepts-genome-assembly.html">
+ <span class="dropdown-text">Genome Assembly Concepts</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../secondary-analysis/contigs-de-novo-assembly.html">
+ <span class="dropdown-text">Contigs de novo Assembly</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../secondary-analysis/scaffolding.html">
+ <span class="dropdown-text">Scaffolding</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../secondary-analysis/assembly-evaluation.html">
+ <span class="dropdown-text">Assembly Evaluation</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-tertiary-analysis" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Tertiary Analysis</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-tertiary-analysis">    
+        <li>
+    <a class="dropdown-item" href="../tertiary-analysis/genome-annotation.html">
+ <span class="dropdown-text">Genome Annotation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../tertiary-analysis/comparative-genomics.html">
+ <span class="dropdown-text">Comparative Genomics</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-more" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">More</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-more">    
+        <li>
+    <a class="dropdown-item" href="../more/reference-enabled-bioinformatics.html">
+ <span class="dropdown-text">Reference-enabled Bioinformatics</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../more/intro-nextflow.html">
+ <span class="dropdown-text">Intro to NextFlow</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-hands-on-practice" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Hands-on Practice</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-hands-on-practice">    
+        <li>
+    <a class="dropdown-item" href="../hands-on/01-fetch-public-datasets.html">
+ <span class="dropdown-text">Fetch Public Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/02-primary-analysis.html">
+ <span class="dropdown-text">Primary analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/03-kmer-analysis.html">
+ <span class="dropdown-text">Kmer-based Analysis</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/04-hybrid-assembly-spades-masurca.html">
+ <span class="dropdown-text">Hybrid Assembly (SPAdes/MaSuRCA)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/05-assembly-evaluation.html">
+ <span class="dropdown-text">Assembly Evaluation</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/06-scaffolding.html">
+ <span class="dropdown-text">Secondary scaffolding</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/07-repeats-analysis.html">
+ <span class="dropdown-text">Repeats Annotation and Masking</span></a>
+  </li>  
+    </ul>
+  </li>
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#repeats-analysis-with-repeatmasker" id="toc-repeats-analysis-with-repeatmasker" class="nav-link active" data-scroll-target="#repeats-analysis-with-repeatmasker"><span class="header-section-number">7</span> Repeats Analysis with RepeatMasker</a>
+  <ul class="collapse">
+  <li><a href="#introduction-to-repeatmasker" id="toc-introduction-to-repeatmasker" class="nav-link" data-scroll-target="#introduction-to-repeatmasker"><span class="header-section-number">7.1</span> Introduction to RepeatMasker</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives"><span class="header-section-number">7.2</span> Objectives</a></li>
+  <li><a href="#configuration-and-setup" id="toc-configuration-and-setup" class="nav-link" data-scroll-target="#configuration-and-setup"><span class="header-section-number">7.3</span> Configuration and Setup</a>
+  <ul class="collapse">
+  <li><a href="#environment-variables" id="toc-environment-variables" class="nav-link" data-scroll-target="#environment-variables"><span class="header-section-number">7.3.1</span> Environment Variables</a></li>
+  <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">7.3.2</span> Software Dependencies</a></li>
+  </ul></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">7.4</span> Data Preparation</a>
+  <ul class="collapse">
+  <li><a href="#download-assembly" id="toc-download-assembly" class="nav-link" data-scroll-target="#download-assembly"><span class="header-section-number">7.4.1</span> Download Assembly</a></li>
+  <li><a href="#prepare-repeatmasker-libraries" id="toc-prepare-repeatmasker-libraries" class="nav-link" data-scroll-target="#prepare-repeatmasker-libraries"><span class="header-section-number">7.4.2</span> Prepare RepeatMasker Libraries</a></li>
+  </ul></li>
+  <li><a href="#de-novo-repeat-identification-with-repeatmodeler" id="toc-de-novo-repeat-identification-with-repeatmodeler" class="nav-link" data-scroll-target="#de-novo-repeat-identification-with-repeatmodeler"><span class="header-section-number">7.5</span> De Novo Repeat Identification with RepeatModeler</a>
+  <ul class="collapse">
+  <li><a href="#build-repeatmodeler-database" id="toc-build-repeatmodeler-database" class="nav-link" data-scroll-target="#build-repeatmodeler-database"><span class="header-section-number">7.5.1</span> Build RepeatModeler Database</a></li>
+  <li><a href="#run-repeatmodeler" id="toc-run-repeatmodeler" class="nav-link" data-scroll-target="#run-repeatmodeler"><span class="header-section-number">7.5.2</span> Run RepeatModeler</a></li>
+  <li><a href="#repeatmodeler-output" id="toc-repeatmodeler-output" class="nav-link" data-scroll-target="#repeatmodeler-output"><span class="header-section-number">7.5.3</span> RepeatModeler Output</a></li>
+  <li><a href="#examine-repeatmodeler-results" id="toc-examine-repeatmodeler-results" class="nav-link" data-scroll-target="#examine-repeatmodeler-results"><span class="header-section-number">7.5.4</span> Examine RepeatModeler Results</a></li>
+  <li><a href="#combine-dfam-database-with-custom-library" id="toc-combine-dfam-database-with-custom-library" class="nav-link" data-scroll-target="#combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.5</span> Combine Dfam Database with Custom Library</a></li>
+  </ul></li>
+  <li><a href="#running-repeatmasker-with-database-only" id="toc-running-repeatmasker-with-database-only" class="nav-link" data-scroll-target="#running-repeatmasker-with-database-only"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only</a>
+  <ul class="collapse">
+  <li><a href="#execute-repeatmasker-with-dfam-only" id="toc-execute-repeatmasker-with-dfam-only" class="nav-link" data-scroll-target="#execute-repeatmasker-with-dfam-only"><span class="header-section-number">7.6.1</span> Execute RepeatMasker with Dfam Only</a></li>
+  <li><a href="#expected-results" id="toc-expected-results" class="nav-link" data-scroll-target="#expected-results"><span class="header-section-number">7.6.2</span> Expected Results</a></li>
+  </ul></li>
+  <li><a href="#running-repeatmasker-with-combined-libraries" id="toc-running-repeatmasker-with-combined-libraries" class="nav-link" data-scroll-target="#running-repeatmasker-with-combined-libraries"><span class="header-section-number">7.7</span> Running RepeatMasker with Combined Libraries</a>
+  <ul class="collapse">
+  <li><a href="#library-reconfiguration" id="toc-library-reconfiguration" class="nav-link" data-scroll-target="#library-reconfiguration"><span class="header-section-number">7.7.1</span> Library Reconfiguration</a></li>
+  <li><a href="#execute-repeatmasker" id="toc-execute-repeatmasker" class="nav-link" data-scroll-target="#execute-repeatmasker"><span class="header-section-number">7.7.2</span> Execute RepeatMasker</a></li>
+  </ul></li>
+  <li><a href="#visualizing-repeatmasker-results" id="toc-visualizing-repeatmasker-results" class="nav-link" data-scroll-target="#visualizing-repeatmasker-results"><span class="header-section-number">7.8</span> Visualizing RepeatMasker Results</a>
+  <ul class="collapse">
+  <li><a href="#built-in-repeatmasker-visualization-tools" id="toc-built-in-repeatmasker-visualization-tools" class="nav-link" data-scroll-target="#built-in-repeatmasker-visualization-tools"><span class="header-section-number">7.8.1</span> Built-in RepeatMasker Visualization Tools</a></li>
+  <li><a href="#genome-browser-visualization" id="toc-genome-browser-visualization" class="nav-link" data-scroll-target="#genome-browser-visualization"><span class="header-section-number">7.8.2</span> Genome Browser Visualization</a></li>
+  <li><a href="#summary-statistics" id="toc-summary-statistics" class="nav-link" data-scroll-target="#summary-statistics"><span class="header-section-number">7.8.3</span> Summary Statistics</a></li>
+  </ul></li>
+  <li><a href="#understanding-repeatmasker-output-metrics" id="toc-understanding-repeatmasker-output-metrics" class="nav-link" data-scroll-target="#understanding-repeatmasker-output-metrics"><span class="header-section-number">7.9</span> Understanding RepeatMasker Output Metrics</a>
+  <ul class="collapse">
+  <li><a href="#kimura-substitution-level" id="toc-kimura-substitution-level" class="nav-link" data-scroll-target="#kimura-substitution-level"><span class="header-section-number">7.9.1</span> Kimura Substitution Level</a></li>
+  <li><a href="#why-genome-percentages-can-exceed-100" id="toc-why-genome-percentages-can-exceed-100" class="nav-link" data-scroll-target="#why-genome-percentages-can-exceed-100"><span class="header-section-number">7.9.2</span> Why Genome Percentages Can Exceed 100%</a></li>
+  </ul></li>
+  <li><a href="#repeatmasker-approaches--species-vs.-famdb.py-lib" id="toc-repeatmasker-approaches--species-vs.-famdb.py-lib" class="nav-link" data-scroll-target="#repeatmasker-approaches--species-vs.-famdb.py-lib"><span class="header-section-number">7.10</span> RepeatMasker Approaches: <code>-species</code> vs.&nbsp;<code>famdb.py/-lib</code></a>
+  <ul class="collapse">
+  <li><a href="#species-approach-narrow-coverage" id="toc-species-approach-narrow-coverage" class="nav-link" data-scroll-target="#species-approach-narrow-coverage"><span class="header-section-number">7.10.1</span> <code>-species</code> Approach (Narrow Coverage)</a></li>
+  <li><a href="#famdb.py-with---ancestors---descendants-broad-coverage" id="toc-famdb.py-with---ancestors---descendants-broad-coverage" class="nav-link" data-scroll-target="#famdb.py-with---ancestors---descendants-broad-coverage"><span class="header-section-number">7.10.2</span> <code>famdb.py</code> with <code>--ancestors --descendants</code> (Broad Coverage)</a></li>
+  <li><a href="#combined-approach-dfam-repeatmodeler" id="toc-combined-approach-dfam-repeatmodeler" class="nav-link" data-scroll-target="#combined-approach-dfam-repeatmodeler"><span class="header-section-number">7.10.3</span> Combined Approach: Dfam + RepeatModeler</a></li>
+  </ul></li>
+  <li><a href="#expected-repeat-content-results" id="toc-expected-repeat-content-results" class="nav-link" data-scroll-target="#expected-repeat-content-results"><span class="header-section-number">7.11</span> Expected Repeat Content Results</a></li>
+  <li><a href="#file-outputs-and-organization" id="toc-file-outputs-and-organization" class="nav-link" data-scroll-target="#file-outputs-and-organization"><span class="header-section-number">7.12</span> File Outputs and Organization</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Repeats Analysis with RepeatMasker</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julien Fouret </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="repeats-analysis-with-repeatmasker" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Repeats Analysis with RepeatMasker</h1>
+<p>In this chapter, we will perform repeat analysis on our assembled genome. Repetitive elements are a major component of eukaryotic genomes and their identification is a crucial step before gene annotation. We will use RepeatMasker, a widely used tool for identifying and classifying repetitive elements.</p>
+<section id="introduction-to-repeatmasker" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="introduction-to-repeatmasker"><span class="header-section-number">7.1</span> Introduction to RepeatMasker</h2>
+<p>RepeatMasker is a program that screens DNA sequences for interspersed repeats and low complexity DNA sequences. The output of the program is a detailed annotation of the repeats that are present in the query sequence as well as a modified version of the query sequence in which all the annotated repeats have been masked.</p>
+<p>RepeatMasker relies on a library of repeat sequences. We will use Dfam, a database of transposable element profile HMM models and consensus sequences.</p>
+</section>
+<section id="objectives" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="objectives"><span class="header-section-number">7.2</span> Objectives</h2>
+<p>The primary objective of this chapter is to <strong>mask repetitive elements</strong> in our assembled genome to prepare it for downstream gene annotation. Repeat masking is essential because:</p>
+<ol type="1">
+<li><p><strong>Gene prediction accuracy</strong>: Unmasked repeats can lead to false gene predictions, as gene-finding algorithms may incorrectly identify repetitive sequences as exons or coding regions.</p></li>
+<li><p><strong>Annotation quality</strong>: Proper repeat masking ensures that gene annotation tools focus on genuine gene sequences rather than being confused by repetitive elements.</p></li>
+<li><p><strong>Comparative analysis</strong>: Masked genomes provide cleaner datasets for comparative genomics and phylogenetic analyses.</p></li>
+</ol>
+<p><strong>Important note</strong>: While we will use RepeatModeler to identify <em>de novo</em> repeat families, our primary goal is <strong>comprehensive genome masking</strong> rather than the discovery of novel transposable elements. The RepeatModeler step ensures we capture species-specific repeats that may not be present in curated databases like Dfam, thereby improving the completeness of our repeat masking.</p>
+</section>
+<section id="configuration-and-setup" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="configuration-and-setup"><span class="header-section-number">7.3</span> Configuration and Setup</h2>
+<section id="environment-variables" class="level3" data-number="7.3.1">
+<h3 data-number="7.3.1" class="anchored" data-anchor-id="environment-variables"><span class="header-section-number">7.3.1</span> Environment Variables</h3>
+<p>We’ll continue using the established environment variables:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS</span><span class="op">=</span>12</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NPA</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="va">$NCPUS</span>/4 <span class="kw">|</span> <span class="fu">bc</span><span class="va">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SN</span><span class="op">=</span>Fo47</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="software-dependencies" class="level3" data-number="7.3.2">
+<h3 data-number="7.3.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">7.3.2</span> Software Dependencies</h3>
+<p>Installing RepeatMasker and all its dependencies can be complex. To simplify this process, we will use a pre-built Apptainer/Docker container from the Dfam consortium, which includes RepeatMasker, RepeatModeler, and all necessary dependencies.</p>
+<p>We will use the <code>dfam/tetools</code> container.</p>
+<section id="apptainer" class="level4" data-number="7.3.2.1">
+<h4 data-number="7.3.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">7.3.2.1</span> Apptainer</h4>
+<p>We will use an alias for the Apptainer command to simplify its usage.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools=<span class="st">"apptainer run docker://dfam/tetools:latest"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+</section>
+<section id="data-preparation" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">7.4</span> Data Preparation</h2>
+<section id="download-assembly" class="level3" data-number="7.4.1">
+<h3 data-number="7.4.1" class="anchored" data-anchor-id="download-assembly"><span class="header-section-number">7.4.1</span> Download Assembly</h3>
+<p>We will use a Fusarium assembly from NCBI as the input for our repeat analysis.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/assembly</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-P</span> 07-repeats-analysis/assembly https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_ASM1308505v1_genomic.fna.gz</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">gunzip</span> 07-repeats-analysis/assembly/GCF_013085055.1_ASM1308505v1_genomic.fna.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we’ll process the assembly file to ensure all sequence lines are in uppercase and rename it appropriately:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Process the assembly file: convert sequences to uppercase and rename</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>input_file <span class="op">=</span> <span class="st">"07-repeats-analysis/assembly/GCF_013085055.1_ASM1308505v1_genomic.fna"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>output_file <span class="op">=</span> <span class="ss">f"07-repeats-analysis/assembly/</span><span class="sc">{</span>os<span class="sc">.</span>getenv(<span class="st">'SN'</span>)<span class="sc">}</span><span class="ss">.fasta"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(input_file, <span class="st">'r'</span>) <span class="im">as</span> infile, <span class="bu">open</span>(output_file, <span class="st">'w'</span>) <span class="im">as</span> outfile:</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> line <span class="kw">in</span> infile:</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> line.startswith(<span class="st">'&gt;'</span>):</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            outfile.write(line)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            outfile.write(line.upper())</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove the original file</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>os.remove(input_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="prepare-repeatmasker-libraries" class="level3" data-number="7.4.2">
+<h3 data-number="7.4.2" class="anchored" data-anchor-id="prepare-repeatmasker-libraries"><span class="header-section-number">7.4.2</span> Prepare RepeatMasker Libraries</h3>
+<p>RepeatMasker requires a library of repeat sequences. We will use the Dfam database. Since we are analyzing a fungal genome, we will download the Dfam partition for fungi.</p>
+<p>According to the Dfam <a href="https://www.dfam.org/releases/current/families/FamDB/README.txt">README</a>, partition 16 contains Fungi.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/libraries/famdb</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-P</span> 07-repeats-analysis/libraries/famdb https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-P</span> 07-repeats-analysis/libraries/famdb https://www.dfam.org/releases/current/families/FamDB/dfam39_full.16.h5.gz</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">gunzip</span> 07-repeats-analysis/libraries/famdb/<span class="pp">*</span>.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>tetools</code> container comes with a minimal library. To use our custom library, we need to create a local <code>Libraries</code> directory and bind-mount it into the container. This approach avoids the NFS mounting issues that can occur with writable sandboxes.</p>
+<p>First, let’s copy the original libraries from the container to our host system to have a proper structure:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/RepeatMasker</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools</span> bash <span class="at">-c</span> <span class="st">"cp -r /opt/RepeatMasker/Libraries 07-repeats-analysis/RepeatMasker/"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now, move our downloaded Dfam partitions into the local <code>famdb</code> directory:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-f</span> 07-repeats-analysis/libraries/famdb/<span class="pp">*</span>.h5 07-repeats-analysis/RepeatMasker/Libraries/famdb/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="de-novo-repeat-identification-with-repeatmodeler" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="de-novo-repeat-identification-with-repeatmodeler"><span class="header-section-number">7.5</span> De Novo Repeat Identification with RepeatModeler</h2>
+<p>Before running RepeatMasker with the curated Dfam library, we should first identify species-specific repeats using RepeatModeler. RepeatModeler builds a custom repeat library from our assembly using <em>de novo</em> repeat identification methods. This is particularly important for organisms that may have novel repeat families not present in existing databases.</p>
+<section id="build-repeatmodeler-database" class="level3" data-number="7.5.1">
+<h3 data-number="7.5.1" class="anchored" data-anchor-id="build-repeatmodeler-database"><span class="header-section-number">7.5.1</span> Build RepeatModeler Database</h3>
+<p>First, we need to create a database for RepeatModeler from our assembly:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/repeatmodeler</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools</span> BuildDatabase <span class="at">-name</span> <span class="va">${SN}</span> 07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>BuildDatabase parameters explained:</strong> - <code>-name</code>: Database name (we use our sample identifier) - Positional argument: Input assembly file</p>
+</section>
+<section id="run-repeatmodeler" class="level3" data-number="7.5.2">
+<h3 data-number="7.5.2" class="anchored" data-anchor-id="run-repeatmodeler"><span class="header-section-number">7.5.2</span> Run RepeatModeler</h3>
+<p>Now we can run RepeatModeler to identify <em>de novo</em> repeat families. This process can take several hours to days depending on genome size and complexity:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools</span> RepeatModeler <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-database</span> <span class="va">${SN}</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-threads</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-LTRStruct</span> <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> 07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>_repeatmodeler.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>RepeatModeler parameters explained:</strong> - <code>-database</code>: Name of the database created with BuildDatabase - <code>-threads</code>: Number of parallel processes - <code>-LTRStruct</code>: Enable LTR structural analysis for better LTR identification</p>
+</section>
+<section id="repeatmodeler-output" class="level3" data-number="7.5.3">
+<h3 data-number="7.5.3" class="anchored" data-anchor-id="repeatmodeler-output"><span class="header-section-number">7.5.3</span> RepeatModeler Output</h3>
+<p>RepeatModeler creates several output files in a timestamped directory (e.g., <code>RM_YYYYMMDD-HHMMSS</code>). The key output files include:</p>
+<ul>
+<li><code>${SN}-families.fa</code>: <strong>Main output</strong> - FASTA file containing consensus sequences of identified repeat families</li>
+<li><code>${SN}-families.stk</code>: Stockholm format alignment file</li>
+<li><code>${SN}-rmod.log</code>: Detailed log of the RepeatModeler run</li>
+</ul>
+<p>Move the results to our organized directory structure:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Move RepeatModeler results to our analysis directory</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SN}</span>-families.fa 07-repeats-analysis/repeatmodeler/</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SN}</span>-families.stk 07-repeats-analysis/repeatmodeler/</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SN}</span>-rmod.log 07-repeats-analysis/repeatmodeler/</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> RM_<span class="pp">*</span> 07-repeats-analysis/repeatmodeler/</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="va">${SN}</span>.<span class="pp">*</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="examine-repeatmodeler-results" class="level3" data-number="7.5.4">
+<h3 data-number="7.5.4" class="anchored" data-anchor-id="examine-repeatmodeler-results"><span class="header-section-number">7.5.4</span> Examine RepeatModeler Results</h3>
+<p>You can examine the identified repeat families:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count the number of repeat families identified</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">"&gt;"</span> 07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Look at the first few families</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-20</span> 07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The headers contain classification information when available (e.g., <code>&gt;rnd-1_family-174#LINE/L1</code>) or <code>#Unknown</code> for unclassified elements.</p>
+</section>
+<section id="combine-dfam-database-with-custom-library" class="level3" data-number="7.5.5">
+<h3 data-number="7.5.5" class="anchored" data-anchor-id="combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.5</span> Combine Dfam Database with Custom Library</h3>
+<p>Since the <code>-lib</code> and <code>-species</code> options are not compatible, we need to create a combined library that includes both the Dfam fungi sequences and our RepeatModeler-generated families. We’ll use the <code>famdb.py</code> tool to extract fungi sequences from our downloaded famdb files.</p>
+<p>First, extract fungi sequences from the Dfam database using famdb.py:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract fungi sequences from Dfam using famdb.py</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> famdb.py <span class="at">-i</span> /opt/RepeatMasker/Libraries/famdb <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  families <span class="at">--format</span> fasta_name <span class="at">--ancestors</span> <span class="at">--descendants</span> <span class="st">'Fungi'</span> <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--include-class-in-name</span> <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now combine the Dfam fungi sequences with our RepeatModeler families:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create combined library</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/<span class="va">${SN}</span>_combined.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This combined approach provides:</p>
+<ol type="1">
+<li><strong>Curated fungi repeats</strong> from the Dfam database</li>
+<li><strong>Novel, species-specific repeats</strong> identified by RepeatModeler</li>
+<li><strong>Full compatibility</strong> with RepeatMasker’s <code>-lib</code> option</li>
+</ol>
+</section>
+</section>
+<section id="running-repeatmasker-with-database-only" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="running-repeatmasker-with-database-only"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only</h2>
+<p>Before using the combined library, let’s first run RepeatMasker using only the Dfam database to see how much repetitive content can be identified with curated repeats alone. This will help us understand the contribution of the <em>de novo</em> RepeatModeler families.</p>
+<section id="execute-repeatmasker-with-dfam-only" class="level3" data-number="7.6.1">
+<h3 data-number="7.6.1" class="anchored" data-anchor-id="execute-repeatmasker-with-dfam-only"><span class="header-section-number">7.6.1</span> Execute RepeatMasker with Dfam Only</h3>
+<p>Run RepeatMasker using only the species-specific Dfam database:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> RepeatMasker <span class="dt">\</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="dt">\</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-pa</span> <span class="va">$NPA</span> <span class="dt">\</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-species</span> fungi <span class="dt">\</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-dir</span> 07-repeats-analysis/rm_out_dfam_only <span class="dt">\</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-gff</span> <span class="dt">\</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta <span class="op">&gt;</span> 07-repeats-analysis/rm_out_dfam_only.log</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="expected-results" class="level3" data-number="7.6.2">
+<h3 data-number="7.6.2" class="anchored" data-anchor-id="expected-results"><span class="header-section-number">7.6.2</span> Expected Results</h3>
+<p>With the Dfam database alone, you should expect to see:</p>
+<ul>
+<li><strong>Repeat content</strong> (~1% or less) for this Fusarium assembly</li>
+<li><strong>Limited identification</strong> of known repeat families</li>
+<li><strong>Gaps</strong> in repeat annotation due to species-specific repeats not present in Dfam</li>
+</ul>
+<p>This demonstrates why <em>de novo</em> repeat identification with RepeatModeler is crucial for comprehensive repeat annotation, especially for organisms that may have novel or poorly characterized repeat families.</p>
+</section>
+</section>
+<section id="running-repeatmasker-with-combined-libraries" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="running-repeatmasker-with-combined-libraries"><span class="header-section-number">7.7</span> Running RepeatMasker with Combined Libraries</h2>
+<p>To run RepeatMasker with our custom libraries, we will use bind mounts. This approach mounts our local <code>Libraries</code> directory over the container’s <code>/opt/RepeatMasker/Libraries</code> directory, making our custom Dfam files available to RepeatMasker without requiring a writable container.</p>
+<section id="library-reconfiguration" class="level3" data-number="7.7.1">
+<h3 data-number="7.7.1" class="anchored" data-anchor-id="library-reconfiguration"><span class="header-section-number">7.7.1</span> Library Reconfiguration</h3>
+<p>First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We’ll use a bind mount to provide our custom libraries to the container and run the update script:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">BIND</span><span class="op">=</span><span class="st">"--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools_lib=<span class="st">"apptainer run </span><span class="va">$BIND</span><span class="st"> docker://dfam/tetools:latest"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> bash <span class="at">-c</span> <span class="st">"rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config &amp;&amp; cd /opt/RepeatMasker &amp;&amp; ./tetoolsDfamUpdate.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This command: - Binds our local <code>Libraries</code> directory to <code>/opt/RepeatMasker/Libraries</code> in the container - Removes any existing configuration file - Runs the update script to generate a new configuration based on our custom libraries</p>
+</section>
+<section id="execute-repeatmasker" class="level3" data-number="7.7.2">
+<h3 data-number="7.7.2" class="anchored" data-anchor-id="execute-repeatmasker"><span class="header-section-number">7.7.2</span> Execute RepeatMasker</h3>
+<p>Now we can run RepeatMasker on our assembly, again using the bind mount to provide our custom libraries:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> RepeatMasker <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="dt">\</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-pa</span> <span class="va">$NPA</span> <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-lib</span> /opt/RepeatMasker/Libraries/<span class="va">${SN}</span>_combined.fa <span class="dt">\</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-dir</span> 07-repeats-analysis/rm_out <span class="dt">\</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-gff</span> <span class="dt">\</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta <span class="op">&gt;</span> 07-repeats-analysis/rm_out.log</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># alternatively but longerto run, we can use -lib /opt/RepeatMasker/Libraries/${SN}_combined.fa</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>RepeatMasker parameters explained:</strong></p>
+<ul>
+<li><p><code>-a</code>: Show alignments</p></li>
+<li><p><code>-pa</code>: Number of parallel processes (threads = pa * 4).</p></li>
+<li><p><code>-species</code>: Specifies the species or group for which to search repeats. This helps in selecting the appropriate repeat library from Dfam. (not compatible with -lib)</p></li>
+<li><p><code>-lib</code>: Custom repeat library file (our RepeatModeler-generated families).</p></li>
+<li><p><code>-dir</code>: Output directory for the results.</p></li>
+<li><p><code>-gff</code>: Output a GFF file in addition to the standard output.</p>
+<p>Positional argument: The input assembly file.</p></li>
+</ul>
+<p>This ensures comprehensive repeat annotation using both existing knowledge and <em>de novo</em> discoveries.</p>
+</section>
+</section>
+<section id="visualizing-repeatmasker-results" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="visualizing-repeatmasker-results"><span class="header-section-number">7.8</span> Visualizing RepeatMasker Results</h2>
+<p>RepeatMasker provides several built-in utilities for visualizing repeat content, and the output can also be used with various genome browsers and custom analysis tools.</p>
+<section id="built-in-repeatmasker-visualization-tools" class="level3" data-number="7.8.1">
+<h3 data-number="7.8.1" class="anchored" data-anchor-id="built-in-repeatmasker-visualization-tools"><span class="header-section-number">7.8.1</span> Built-in RepeatMasker Visualization Tools</h3>
+<p>RepeatMasker includes utilities for creating repeat landscape plots that show the evolutionary age and abundance of different repeat families.</p>
+<section id="generate-repeat-landscape" class="level4" data-number="7.8.1.1">
+<h4 data-number="7.8.1.1" class="anchored" data-anchor-id="generate-repeat-landscape"><span class="header-section-number">7.8.1.1</span> Generate Repeat Landscape</h4>
+<p>The repeat landscape shows the relationship between repeat divergence (evolutionary age) and abundance:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate divergence data</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> calcDivergenceFromAlign.pl <span class="dt">\</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-s</span> 07-repeats-analysis/rm_out/<span class="va">${SN}</span>.fasta.divsum <span class="dt">\</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  07-repeats-analysis/rm_out/<span class="va">${SN}</span>.fasta.align</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create repeat landscape plot</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> createRepeatLandscape.pl <span class="dt">\</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-g</span> 50400000 <span class="dt">\</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">-div</span> 07-repeats-analysis/rm_out/<span class="va">${SN}</span>.fasta.divsum <span class="dt">\</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> 07-repeats-analysis/rm_out/<span class="va">${SN}</span>_repeat_landscape.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This creates an HTML file with an interactive repeat landscape plot.</p>
+</section>
+</section>
+<section id="genome-browser-visualization" class="level3" data-number="7.8.2">
+<h3 data-number="7.8.2" class="anchored" data-anchor-id="genome-browser-visualization"><span class="header-section-number">7.8.2</span> Genome Browser Visualization</h3>
+<p>The GFF output can be directly loaded into genome browsers for visual inspection:</p>
+<section id="using-igv-integrative-genomics-viewer" class="level4" data-number="7.8.2.1">
+<h4 data-number="7.8.2.1" class="anchored" data-anchor-id="using-igv-integrative-genomics-viewer"><span class="header-section-number">7.8.2.1</span> Using IGV (Integrative Genomics Viewer)</h4>
+<ol type="1">
+<li>Load your assembly (<code>${SN}.fasta</code>) as the reference genome</li>
+<li>Load the RepeatMasker GFF file (<code>${SN}.fasta.out.gff</code>) as an annotation track</li>
+<li>Navigate through the genome to examine repeat distribution</li>
+</ol>
+</section>
+</section>
+<section id="summary-statistics" class="level3" data-number="7.8.3">
+<h3 data-number="7.8.3" class="anchored" data-anchor-id="summary-statistics"><span class="header-section-number">7.8.3</span> Summary Statistics</h3>
+<p>The <code>.tbl</code> file provides a comprehensive summary of repeat content:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View the repeat summary table</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 07-repeats-analysis/rm_out/<span class="va">${SN}</span>.fasta.tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This table shows: - Total repeat content percentage - Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.) - Interspersed repeats vs.&nbsp;small RNA - Low complexity and simple repeat content</p>
+</section>
+</section>
+<section id="understanding-repeatmasker-output-metrics" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="understanding-repeatmasker-output-metrics"><span class="header-section-number">7.9</span> Understanding RepeatMasker Output Metrics</h2>
+<section id="kimura-substitution-level" class="level3" data-number="7.9.1">
+<h3 data-number="7.9.1" class="anchored" data-anchor-id="kimura-substitution-level"><span class="header-section-number">7.9.1</span> Kimura Substitution Level</h3>
+<p>The Kimura substitution level (also called Kimura distance or K2P distance) is a measure of evolutionary divergence between the identified repeat and its consensus sequence in the database. It represents the estimated percentage of nucleotide substitutions that have occurred since the repeat was originally inserted into the genome.</p>
+<p><strong>Key points about Kimura substitution levels:</strong></p>
+<ul>
+<li><strong>Low values (0-5%)</strong>: Recent insertions, relatively unchanged from the original sequence</li>
+<li><strong>Medium values (5-20%)</strong>: Moderately aged repeats with accumulated mutations</li>
+<li><strong>High values (&gt;20%)</strong>: Ancient repeats that have significantly diverged from their original sequence</li>
+</ul>
+<p>The Kimura distance accounts for: - Transition mutations (A↔︎G, C↔︎T) occurring more frequently than transversions - Multiple substitutions at the same position (back-mutations) - Saturation effects in highly diverged sequences</p>
+</section>
+<section id="why-genome-percentages-can-exceed-100" class="level3" data-number="7.9.2">
+<h3 data-number="7.9.2" class="anchored" data-anchor-id="why-genome-percentages-can-exceed-100"><span class="header-section-number">7.9.2</span> Why Genome Percentages Can Exceed 100%</h3>
+<p>In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:</p>
+<p><strong>1. Overlapping Annotations:</strong> - Different repeat families may overlap in the same genomic region - Nested transposable elements (one inserted within another) - RepeatMasker reports each identified repeat separately, even if they overlap</p>
+<p><strong>2. Fragmented Repeat Detection:</strong> - Large repeats broken by mutations may be detected as multiple smaller fragments - Each fragment contributes to the total count - The sum of fragments may exceed the actual genomic space occupied</p>
+<p><strong>3. Reference vs.&nbsp;Assembly Differences:</strong> - Percentages are calculated relative to the <strong>assembly size</strong>, not the “true” genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated</p>
+<p><strong>4. Calculation Method:</strong> RepeatMasker calculates percentages as:</p>
+<pre><code>Percentage = (Total bp of identified repeats / Assembly size) × 100</code></pre>
+<p>The “Total bp of identified repeats” includes all overlapping regions, which can exceed the actual physical space occupied.</p>
+<p><strong>Interpreting the Results:</strong> - Focus on <strong>relative proportions</strong> between repeat classes rather than absolute percentages - Use the <strong>masked assembly</strong> to see the actual genomic regions covered by repeats - Consider the <strong>non-redundant repeat content</strong> for more accurate genome composition estimates</p>
+</section>
+</section>
+<section id="repeatmasker-approaches--species-vs.-famdb.py-lib" class="level2" data-number="7.10">
+<h2 data-number="7.10" class="anchored" data-anchor-id="repeatmasker-approaches--species-vs.-famdb.py-lib"><span class="header-section-number">7.10</span> RepeatMasker Approaches: <code>-species</code> vs.&nbsp;<code>famdb.py/-lib</code></h2>
+<p>RepeatMasker offers different strategies for accessing repeat libraries, each with distinct advantages and coverage levels:</p>
+<section id="species-approach-narrow-coverage" class="level3" data-number="7.10.1">
+<h3 data-number="7.10.1" class="anchored" data-anchor-id="species-approach-narrow-coverage"><span class="header-section-number">7.10.1</span> <code>-species</code> Approach (Narrow Coverage)</h3>
+<p>The <code>-species fungi</code> option uses RepeatMasker’s built-in species-specific filtering: - <strong>Curated selection</strong>: RepeatMasker selects only well-characterized repeats specific to the taxonomic group - <strong>Conservative approach</strong>: Focuses on high-confidence, validated repeat families - <strong>Limited coverage</strong>: May miss divergent or poorly characterized repeats - <strong>Expected result</strong>: ~1% repeat content for Fusarium (minimal coverage)</p>
+</section>
+<section id="famdb.py-with---ancestors---descendants-broad-coverage" class="level3" data-number="7.10.2">
+<h3 data-number="7.10.2" class="anchored" data-anchor-id="famdb.py-with---ancestors---descendants-broad-coverage"><span class="header-section-number">7.10.2</span> <code>famdb.py</code> with <code>--ancestors --descendants</code> (Broad Coverage)</h3>
+<p>Using <code>famdb.py</code> to extract repeats allows more comprehensive library construction: - <strong>Taxonomic breadth</strong>: Includes repeats from ancestral and descendant taxonomic groups - <strong>Comprehensive coverage</strong>: Captures more divergent repeat families that may be present - <strong>Custom control</strong>: Allows fine-tuning of taxonomic scope - <strong>Expected result</strong>: Higher repeat detection rate (not tested in this tutorial, but likely &gt;5%)</p>
+</section>
+<section id="combined-approach-dfam-repeatmodeler" class="level3" data-number="7.10.3">
+<h3 data-number="7.10.3" class="anchored" data-anchor-id="combined-approach-dfam-repeatmodeler"><span class="header-section-number">7.10.3</span> Combined Approach: Dfam + RepeatModeler</h3>
+<p>The most comprehensive strategy combines curated and <em>de novo</em> identified repeats: - <strong>Dfam coverage</strong>: Curated, well-characterized repeat families via <code>famdb.py</code> - <strong>Species-specific coverage</strong>: Novel repeats identified by RepeatModeler - <strong>Maximum sensitivity</strong>: Captures both known and novel repetitive elements - <strong>Expected result</strong>: ~11% repeat content (most comprehensive masking)</p>
+</section>
+</section>
+<section id="expected-repeat-content-results" class="level2" data-number="7.11">
+<h2 data-number="7.11" class="anchored" data-anchor-id="expected-repeat-content-results"><span class="header-section-number">7.11</span> Expected Repeat Content Results</h2>
+<p>Based on different RepeatMasker approaches, expected repeat content for this Fusarium assembly:</p>
+<p><strong>Tested approaches:</strong> - <strong>Using Dfam database alone</strong> (narrow with <code>-species fungi</code> option): ~1% repeat content (limited coverage) - <strong>Using <em>de novo</em> identified repeats only</strong> (RepeatModeler families): ~6% repeat content - <strong>Using combined approach</strong> (Dfam via <code>famdb.py</code> with ancestors/descendants + RepeatModeler): ~11% repeat content (comprehensive masking)</p>
+<p><strong>Not tested but expected:</strong> - <strong>Using Dfam only</strong> (broad via <code>famdb.py</code> with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)</p>
+<p>The progression from 1% → 6% → 11% demonstrates the importance of combining curated databases with <em>de novo</em> repeat identification for comprehensive genome masking before gene annotation.</p>
+</section>
+<section id="file-outputs-and-organization" class="level2" data-number="7.12">
+<h2 data-number="7.12" class="anchored" data-anchor-id="file-outputs-and-organization"><span class="header-section-number">7.12</span> File Outputs and Organization</h2>
+<p>After RepeatMasker finishes, the <code>07-repeats-analysis/rm_out</code> directory will contain the results of the repeat analysis, including:</p>
+<ul>
+<li><code>*.masked</code>: The input sequence with repeats masked (replaced by ’N’s).</li>
+<li><code>*.out</code>: A detailed annotation of the repeats found.</li>
+<li><code>*.tbl</code>: A summary table of the repeat content.</li>
+<li><code>*.gff</code>: The repeat annotations in GFF format.</li>
+<li><code>*.align</code>: Alignment details for repeat matches (if generated).</li>
+<li><code>*.divsum</code>: Divergence summary (after running calcDivergenceFromAlign.pl).</li>
+<li><code>*_repeat_landscape.html</code>: Interactive repeat landscape plot (if generated).</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/nexomis\.github\.io\/tuto-euk-de-novo-genome\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
