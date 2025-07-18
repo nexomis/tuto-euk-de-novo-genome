@@ -129,7 +129,7 @@ Since the JolyTree container is missing dependencies, we'll create a local conda
 
 ``` bash
 # Create local conda environment in hands-on/venv
-conda create -p venv -c bioconda -c conda-forge jolytree
+conda create -p venv -c bioconda -c conda-forge jolytree bc
 ```
 
 #### Apptainer (Cactus only)

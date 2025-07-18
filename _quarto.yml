@@ -61,6 +61,8 @@ website:
             href: hands-on/09-annot-with-braker.qmd
           - text: "Functional Gene Annotation"
             href: hands-on/10-annot-functional.qmd
+          - text: "Comparative Genomics"
+            href: hands-on/11-comparative-genomics.qmd
     right:
       - href: about.qmd
         text: About

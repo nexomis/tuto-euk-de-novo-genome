@@ -26,7 +26,7 @@ export SN=Fo47
 export NCPUS=12
 export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"
 export proteins="$PWD/08-data/orthodb/Fungi.fa"
-export rna_bam="$PWD/08-data/star/${SN}.sorted.bam"
+export rna_bam="$PWD/08-data/star/${SN}Aligned.sortedByCoord.out.bam"
 ```
 
 ### Software Dependencies
@@ -36,7 +36,7 @@ We will use the official BRAKER3 container.
 #### Apptainer
 
 ``` bash
-alias braker.pl="apptainer run docker://teambraker/braker3:latest braker.pl"
+alias braker.pl="apptainer run --writable-tmpfs docker://teambraker/braker3:latest braker.pl"
 ```
 
 ## Annotation Strategy 1: Proteins Only
@@ -47,9 +47,9 @@ In this strategy, we will run BRAKER using only protein evidence from our curate
 
 ``` bash
 mkdir -p 09-annot/prot_only
-
+sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
 braker.pl \
-    --genome=$assembly \
+    --genome=09-annot/renamed_assembly.fa \
     --prot_seq=$proteins \
     --species=${SN}_prot \
     --workingdir=09-annot/prot_only \
@@ -72,9 +72,11 @@ Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the rec
 
 ``` bash
 mkdir -p 09-annot/prot_rna
+# Make sure to enforce simple name without space (better if integrated at the mapping step) 
+sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
 
 braker.pl \
-    --genome=$assembly \
+    --genome=09-annot/renamed_assembly.fa \
     --prot_seq=$proteins \
     --bam=$rna_bam \
     --species=${SN}_prot_rna \
