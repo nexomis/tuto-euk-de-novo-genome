@@ -145,10 +145,7 @@ tetools RepeatModeler \
   > 07-repeats-analysis/repeatmodeler/${SN}_repeatmodeler.log 2>&1
 ```
 
-**RepeatModeler parameters explained:**
-- `-database`: Name of the database created with BuildDatabase
-- `-threads`: Number of parallel processes
-- `-LTRStruct`: Enable LTR structural analysis for better LTR identification
+**RepeatModeler parameters explained:** - `-database`: Name of the database created with BuildDatabase - `-threads`: Number of parallel processes - `-LTRStruct`: Enable LTR structural analysis for better LTR identification
 
 ### RepeatModeler Output
 
@@ -205,11 +202,11 @@ cat 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa \
     > 07-repeats-analysis/RepeatMasker/Libraries/${SN}_combined.fa
 ```
 
-This combined approach provides: 
+This combined approach provides:
 
-1. **Curated fungi repeats** from the Dfam database 
-2. **Novel, species-specific repeats** identified by RepeatModeler 
-3. **Full compatibility** with RepeatMasker's `-lib` option
+1.  **Curated fungi repeats** from the Dfam database
+2.  **Novel, species-specific repeats** identified by RepeatModeler
+3.  **Full compatibility** with RepeatMasker's `-lib` option
 
 ## Running RepeatMasker with Database Only
 
@@ -274,7 +271,7 @@ tetools_lib RepeatMasker \
 
 -   `-a`: Show alignments
 
--   `-pa`: Number of parallel processes (threads = pa * 4).
+-   `-pa`: Number of parallel processes (threads = pa \* 4).
 
 -   `-species`: Specifies the species or group for which to search repeats. This helps in selecting the appropriate repeat library from Dfam. (not compatible with -lib)
 

@@ -1,0 +1,101 @@
+---
+title: "Genome Annotation with BRAKER"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 8
+execute:
+  eval: false
+  echo: true
+---
+
+# Genome Annotation with BRAKER
+
+In this chapter, we will perform genome annotation using BRAKER, a powerful pipeline for fully automated gene prediction in eukaryotic genomes. We will use the assembly of *Fusarium oxysporum* f. sp. *lycopersici* strain Fo47 that we have been working with.
+
+BRAKER combines GeneMark-ETP and AUGUSTUS, two highly accurate gene prediction tools, and can leverage evidence from RNA-Seq data and protein homology to improve annotation quality.
+
+## Configuration and Setup
+
+### Environment Variables
+
+We will set up environment variables for our annotation workflow.
+
+``` bash
+export SN=Fo47
+export NCPUS=12
+export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"
+export proteins="$PWD/08-data/orthodb/Fungi.fa"
+export rna_bam="$PWD/08-data/star/${SN}.sorted.bam"
+```
+
+### Software Dependencies
+
+We will use the official BRAKER3 container.
+
+#### Apptainer
+
+``` bash
+alias braker.pl="apptainer run docker://teambraker/braker3:latest braker.pl"
+```
+
+## Annotation Strategy 1: Proteins Only
+
+In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.
+
+> **A note on using existing species parameters:** AUGUSTUS comes with pre-trained parameters for many species, including *Fusarium*. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform *de novo* training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The `--species` parameter in our `braker.pl` command gives a unique name to the new model that BRAKER will create.
+
+``` bash
+mkdir -p 09-annot/prot_only
+
+braker.pl \
+    --genome=$assembly \
+    --prot_seq=$proteins \
+    --species=${SN}_prot \
+    --workingdir=09-annot/prot_only \
+    --threads=$NCPUS \
+    --fungus
+```
+
+**BRAKER parameters explained:**
+
+-   `--genome`: Path to the repeat-masked genome assembly.
+-   `--prot_seq`: Path to the protein database (OrthoDB Fungi).
+-   `--species`: A unique name for the species model being trained.
+-   `--workingdir`: Directory to store the output files.
+-   `--threads`: Number of CPU threads to use.
+-   `--fungus`: Specifies to use the fungal branch point model, which is appropriate for our organism.
+
+## Annotation Strategy 2: Proteins + RNA-Seq
+
+Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the recommended approach as it combines homology-based evidence with transcriptomic evidence, leading to more accurate gene predictions.
+
+``` bash
+mkdir -p 09-annot/prot_rna
+
+braker.pl \
+    --genome=$assembly \
+    --prot_seq=$proteins \
+    --bam=$rna_bam \
+    --species=${SN}_prot_rna \
+    --workingdir=09-annot/prot_rna \
+    --threads=$NCPUS \
+    --fungus
+```
+
+**Additional BRAKER parameter:**
+
+-   `--bam`: Path to the sorted BAM file containing aligned RNA-Seq reads.
+
+## Expected Outputs
+
+After running BRAKER, each working directory (`09-annot/prot_only` and `09-annot/prot_rna`) will contain several output files. The most important ones are:
+
+-   `braker.gtf`: The final gene predictions in GTF format.
+-   `braker.aa`: The predicted protein sequences in FASTA format.
+-   `braker.codingseq`: The predicted coding sequences in FASTA format.
+-   `GeneMark-EP/`: Directory containing GeneMark-EP output (for protein-only mode).
+-   `GeneMark-ETP/`: Directory containing GeneMark-ETP output (for protein + RNA-Seq mode).
+-   `Augustus/`: Directory containing AUGUSTUS output and trained models.
+
+You can compare the results from both strategies to see the impact of adding RNA-Seq evidence on the final gene annotations.

@@ -1,0 +1,98 @@
+---
+title: "Prepare Data for Annotation"
+author: Julien Fouret
+format: 
+  html:
+    number-offset: 7
+execute:
+  eval: false
+  echo: true
+---
+
+In this section, we will prepare the necessary data for the genome annotation of our assembly. This involves setting up the required tools, creating a custom protein database, and processing RNA-Seq data to be used as evidence for gene prediction.
+
+## Setup
+
+We will use `apptainer` to manage our software dependencies. Here are the aliases we will use:
+
+``` bash
+alias prefetch="apptainer run docker://ncbi/sra-tools prefetch"
+alias fasterq-dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
+alias fastp="apptainer exec docker://staphb/fastp fastp"
+alias STAR="apptainer exec docker://quay.io/biocontainers/star:2.7.11b--h5ca1c30_6 STAR"
+alias samtools="apptainer exec docker://staphb/samtools samtools"
+```
+
+## Variable
+
+```         
+export SRR_RNA="SRR10123445"
+export SN=Fo47
+export NCPUS=12
+export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"
+```
+
+## Create Fungi Protein Database from OrthoDB
+
+We will create a custom protein database containing only Fungi sequences from OrthoDB.
+
+First, let's create a directory and download the necessary files.
+
+``` bash
+mkdir -p 08-data/orthodb
+
+wget https://data.orthodb.org/current/download/odb12v1_aa_fasta.gz -O 08-data/orthodb/odb12v1_aa_fasta.gz
+wget https://data.orthodb.org/current/download/odb12v1_levels.tab.gz -O 08-data/orthodb/odb12v1_levels.tab.gz
+wget https://data.orthodb.org/current/download/odb12v1_level2species.tab.gz -O 08-data/orthodb/odb12v1_level2species.tab.gz
+gunzip 08-data/orthodb/*.gz
+
+wget https://raw.githubusercontent.com/tomasbruna/orthodb-clades/master/selectClade.py -O 08-data/orthodb/selectClade.py
+chmod +x 08-data/orthodb/selectClade.py
+```
+
+Now, we can run the script to select the Fungi sequences.
+
+``` bash
+./08-data/orthodb/selectClade.py \
+  08-data/orthodb/odb12v1_aa_fasta \
+  08-data/orthodb/odb12v1_levels.tab \
+  08-data/orthodb/odb12v1_level2species.tab \
+  Fungi > 08-data/orthodb/Fungi.fa
+```
+
+## Fetch and Clean RNA-Seq Reads
+
+We will download RNA-Seq data from the SRA and clean it to remove low-quality reads and adapters.
+
+``` bash
+mkdir -p 08-data/reads
+
+prefetch $SRR_RNA -O 08-data/reads
+fasterq-dump $SRR_RNA -O 08-data/reads
+
+fastp -i 08-data/reads/${SRR_RNA}_1.fastq -I 08-data/reads/${SRR_RNA}_2.fastq \
+      -o 08-data/reads/${SRR_RNA}_1.clean.fastq.gz -O 08-data/reads/${SRR_RNA}_2.clean.fastq.gz \
+      --html 08-data/reads/${SRR_RNA}.fastp.html
+```
+
+## Align RNA-Seq Reads with STAR
+
+Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis.
+
+``` bash
+mkdir -p 08-data/star/INDEX
+
+STAR --runThreadN $NCPUS \
+  --runMode genomeGenerate \
+  --genomeDir 08-data/star/INDEX \
+  --genomeFastaFiles $assembly
+
+STAR --runThreadN $NCPUS \
+     --genomeDir 08-data/star/INDEX \
+     --readFilesIn 08-data/reads/${SRR_RNA}_1.clean.fastq.gz 08-data/reads/${SRR_RNA}_2.clean.fastq.gz \
+     --readFilesCommand zcat \
+     --outFileNamePrefix 08-data/star/$SN \
+     --outSAMtype BAM SortedByCoordinate
+
+samtools flagstats 08-data/star/${SN}.sorted.bam
+```
