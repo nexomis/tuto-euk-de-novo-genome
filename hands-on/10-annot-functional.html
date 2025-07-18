@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Julien Fouret">
 
-<title>Assembly Evaluation – De Novo Genome Assembly Tutorial</title>
+<title>Functional Annotation – De Novo Genome Assembly Tutorial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -176,7 +212,24 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#assembly-evaluation" id="toc-assembly-evaluation" class="nav-link active" data-scroll-target="#assembly-evaluation"><span class="header-section-number">1</span> Assembly Evaluation</a></li>
+  <li><a href="#functional-annotation" id="toc-functional-annotation" class="nav-link active" data-scroll-target="#functional-annotation"><span class="header-section-number">10</span> Functional Annotation</a>
+  <ul class="collapse">
+  <li><a href="#configuration-and-setup" id="toc-configuration-and-setup" class="nav-link" data-scroll-target="#configuration-and-setup"><span class="header-section-number">10.1</span> Configuration and Setup</a>
+  <ul class="collapse">
+  <li><a href="#environment-variables" id="toc-environment-variables" class="nav-link" data-scroll-target="#environment-variables"><span class="header-section-number">10.1.1</span> Environment Variables</a></li>
+  <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">10.1.2</span> Software Dependencies</a></li>
+  </ul></li>
+  <li><a href="#interproscan" id="toc-interproscan" class="nav-link" data-scroll-target="#interproscan"><span class="header-section-number">10.2</span> InterProScan</a>
+  <ul class="collapse">
+  <li><a href="#download-databases" id="toc-download-databases" class="nav-link" data-scroll-target="#download-databases"><span class="header-section-number">10.2.1</span> Download databases</a></li>
+  <li><a href="#run-interproscan" id="toc-run-interproscan" class="nav-link" data-scroll-target="#run-interproscan"><span class="header-section-number">10.2.2</span> Run InterProScan</a></li>
+  </ul></li>
+  <li><a href="#eggnog-mapper" id="toc-eggnog-mapper" class="nav-link" data-scroll-target="#eggnog-mapper"><span class="header-section-number">10.3</span> EggNog-mapper</a>
+  <ul class="collapse">
+  <li><a href="#download-databases-1" id="toc-download-databases-1" class="nav-link" data-scroll-target="#download-databases-1"><span class="header-section-number">10.3.1</span> Download databases</a></li>
+  <li><a href="#run-eggnog-mapper" id="toc-run-eggnog-mapper" class="nav-link" data-scroll-target="#run-eggnog-mapper"><span class="header-section-number">10.3.2</span> Run eggNOG-mapper</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
 </nav>
@@ -189,13 +242,19 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Assembly Evaluation</h1>
+<h1 class="title">Functional Annotation</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julien Fouret </p>
+          </div>
+  </div>
     
   
     
@@ -206,11 +265,114 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="assembly-evaluation" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Assembly Evaluation</h1>
-<p>Content for Assembly Evaluation.</p>
+<section id="functional-annotation" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Functional Annotation</h1>
+<p>In this chapter, we will perform functional annotation of the predicted proteins from our genome assembly. This process involves assigning biological functions to the proteins based on their similarity to known proteins and the presence of conserved domains. We will use two widely used tools for this purpose: InterProScan and eggNOG-mapper.</p>
+<section id="configuration-and-setup" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="configuration-and-setup"><span class="header-section-number">10.1</span> Configuration and Setup</h2>
+<section id="environment-variables" class="level3" data-number="10.1.1">
+<h3 data-number="10.1.1" class="anchored" data-anchor-id="environment-variables"><span class="header-section-number">10.1.1</span> Environment Variables</h3>
+<p>We will define environment variables for our sample name, the number of CPUs, and the path to the proteome file generated in the previous step (gene prediction).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SN</span><span class="op">=</span>Fo47</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS</span><span class="op">=</span>12</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">proteome</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/09-braker/</span><span class="va">${SN}</span><span class="st">/annot.prot.fa"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: The path to the proteome file assumes it was generated by BRAKER in the previous chapter.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Adjust the path if your file is located elsewhere.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="software-dependencies" class="level3" data-number="10.1.2">
+<h3 data-number="10.1.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">10.1.2</span> Software Dependencies</h3>
+<p>We will use Apptainer to run InterProScan and eggNOG-mapper. We will define aliases for them.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> interproscan_app=<span class="st">"apptainer run docker://interpro/interproscan:5.75-106.0"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> eggnog-mapper=<span class="st">"apptainer run docker://quay.io/biocontainers/eggnog-mapper:2.1.13--pyhdfd78af_0"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="interproscan" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="interproscan"><span class="header-section-number">10.2</span> InterProScan</h2>
+<p>InterProScan is a tool that scans protein sequences against InterPro’s predictive models, which are provided by its member databases. This provides a comprehensive overview of protein function by identifying protein domains and families.</p>
+<p>More information can be found in the <a href="https://interproscan-docs.readthedocs.io/en/v5/HowToUseViaContainer.html">InterProScan documentation</a>.</p>
+<section id="download-databases" class="level3" data-number="10.2.1">
+<h3 data-number="10.2.1" class="anchored" data-anchor-id="download-databases"><span class="header-section-number">10.2.1</span> Download databases</h3>
+<p>First, we need to download the InterProScan data. This is a large download, so it may take some time.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 10-functional-annotation/interproscan</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-o</span> 10-functional-annotation/interproscan/interproscan-data-5.75-106.0.tar.gz http://ftp.ebi.ac.uk/pub/software/unix/iprscan/5/5.75-106.0/alt/interproscan-data-5.75-106.0.tar.gz</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-pxzf</span> 10-functional-annotation/interproscan/interproscan-data-5.75-106.0.tar.gz <span class="at">-C</span> 10-functional-annotation/interproscan</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="run-interproscan" class="level3" data-number="10.2.2">
+<h3 data-number="10.2.2" class="anchored" data-anchor-id="run-interproscan"><span class="header-section-number">10.2.2</span> Run InterProScan</h3>
+<p>Now we can run InterProScan on our proteome file. We will create directories for input, temporary files, and output.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 10-functional-annotation/interproscan/<span class="dt">{input</span><span class="op">,</span><span class="dt">temp</span><span class="op">,</span><span class="dt">output}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="va">$proteome</span> 10-functional-annotation/interproscan/input/</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># We need to bind the data, input, temp, and output directories to the container.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Note that we are using the full path to the directories.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="va">DATADIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/interproscan/interproscan-5.75-106.0/data</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="va">INPUTDIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/interproscan/input</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="va">TEMPDIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/interproscan/temp</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="va">OUTPUTDIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/interproscan/output</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># We build a full command with bind mounts instead of using the simple alias</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> run <span class="dt">\</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$DATADIR</span>:/opt/interproscan/data <span class="dt">\</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$INPUTDIR</span>:/input <span class="dt">\</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$TEMPDIR</span>:/temp <span class="dt">\</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$OUTPUTDIR</span>:/output <span class="dt">\</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    docker://interpro/interproscan:5.75-106.0 <span class="dt">\</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">--input</span> /input/<span class="va">$(</span><span class="fu">basename</span> <span class="va">$proteome)</span> <span class="dt">\</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">--output-dir</span> /output <span class="dt">\</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">--tempdir</span> /temp <span class="dt">\</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">--cpu</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">--goterms</span> <span class="dt">\</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">--pathways</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<blockquote class="blockquote">
+<p>To restrict the analysis to specific databases (e.g., those most relevant for fungi), you can use the <code>--applications</code> flag followed by a comma-separated list of databases (e.g., <code>--applications Pfam,SUPERFAMILY,CDD</code>).</p>
+</blockquote>
+</section>
+</section>
+<section id="eggnog-mapper" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="eggnog-mapper"><span class="header-section-number">10.3</span> EggNog-mapper</h2>
+<p>eggNOG-mapper is a tool for fast functional annotation of novel sequences using precomputed orthologous groups from the eggNOG database.</p>
+<p>More information can be found in the <a href="https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.13">eggNOG-mapper documentation</a>.</p>
+<section id="download-databases-1" class="level3" data-number="10.3.1">
+<h3 data-number="10.3.1" class="anchored" data-anchor-id="download-databases-1"><span class="header-section-number">10.3.1</span> Download databases</h3>
+<p>We need to download the eggNOG-mapper data. We will use the <code>download_eggnog_data.py</code> script provided in the container. As requested, we will create a database specifically for Fungi to refine our analysis.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 10-functional-annotation/eggnog</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the main eggnog databases</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">eggnog-mapper</span> download_eggnog_data.py <span class="at">-y</span> <span class="at">--data_dir</span> 10-functional-annotation/eggnog</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a diamond database for Fungi.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># This will download all eggNOG proteins first if not present, then create the fungi-specific database.</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">eggnog-mapper</span> create_dbs.py <span class="at">-m</span> diamond <span class="at">--dbname</span> fungi <span class="at">--taxa</span> Fungi <span class="at">--data_dir</span> 10-functional-annotation/eggnog</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="run-eggnog-mapper" class="level3" data-number="10.3.2">
+<h3 data-number="10.3.2" class="anchored" data-anchor-id="run-eggnog-mapper"><span class="header-section-number">10.3.2</span> Run eggNOG-mapper</h3>
+<p>Now we can run eggNOG-mapper on our proteome file using the custom fungi database.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 10-functional-annotation/eggnog/output</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># We need to bind the data directory and the input/output directories.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="va">DATADIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/eggnog</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="va">INPUTFILE</span><span class="op">=</span><span class="va">$proteome</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="va">OUTPUTDIR</span><span class="op">=</span><span class="va">$PWD</span>/10-functional-annotation/eggnog/output</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="va">OUTPUT_PREFIX</span><span class="op">=</span><span class="va">${SN}</span>_eggnog</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># We build a full command with bind mounts to ensure correct paths inside the container.</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> run <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$DATADIR</span>:/data <span class="dt">\</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$(</span><span class="fu">dirname</span> <span class="va">$INPUTFILE)</span>:/input <span class="dt">\</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bind</span> <span class="va">$OUTPUTDIR</span>:/output <span class="dt">\</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    docker://quay.io/biocontainers/eggnog-mapper:2.1.13--pyhdfd78af_0 <span class="dt">\</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    emapper.py <span class="dt">\</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">-i</span> /input/<span class="va">$(</span><span class="fu">basename</span> <span class="va">$INPUTFILE)</span> <span class="dt">\</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> /output/<span class="va">$OUTPUT_PREFIX</span> <span class="dt">\</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">--data_dir</span> /data <span class="dt">\</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">--dmnd_db</span> /data/fungi.dmnd <span class="dt">\</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">--cpu</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">--override</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

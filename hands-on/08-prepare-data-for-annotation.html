@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Julien Fouret">
 
-<title>Assembly Evaluation – De Novo Genome Assembly Tutorial</title>
+<title>Prepare Data for Annotation – De Novo Genome Assembly Tutorial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -176,7 +212,11 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#assembly-evaluation" id="toc-assembly-evaluation" class="nav-link active" data-scroll-target="#assembly-evaluation"><span class="header-section-number">1</span> Assembly Evaluation</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">1</span> Setup</a></li>
+  <li><a href="#variable" id="toc-variable" class="nav-link" data-scroll-target="#variable"><span class="header-section-number">2</span> Variable</a></li>
+  <li><a href="#create-fungi-protein-database-from-orthodb" id="toc-create-fungi-protein-database-from-orthodb" class="nav-link" data-scroll-target="#create-fungi-protein-database-from-orthodb"><span class="header-section-number">3</span> Create Fungi Protein Database from OrthoDB</a></li>
+  <li><a href="#fetch-and-clean-rna-seq-reads" id="toc-fetch-and-clean-rna-seq-reads" class="nav-link" data-scroll-target="#fetch-and-clean-rna-seq-reads"><span class="header-section-number">4</span> Fetch and Clean RNA-Seq Reads</a></li>
+  <li><a href="#align-rna-seq-reads-with-star" id="toc-align-rna-seq-reads-with-star" class="nav-link" data-scroll-target="#align-rna-seq-reads-with-star"><span class="header-section-number">5</span> Align RNA-Seq Reads with STAR</a></li>
   </ul>
 </nav>
 </nav>
@@ -189,13 +229,19 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Assembly Evaluation</h1>
+<h1 class="title">Prepare Data for Annotation</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julien Fouret </p>
+          </div>
+  </div>
     
   
     
@@ -206,9 +252,73 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="assembly-evaluation" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Assembly Evaluation</h1>
-<p>Content for Assembly Evaluation.</p>
+<p>In this section, we will prepare the necessary data for the genome annotation of our assembly. This involves setting up the required tools, creating a custom protein database, and processing RNA-Seq data to be used as evidence for gene prediction.</p>
+<section id="setup" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="setup"><span class="header-section-number">1</span> Setup</h2>
+<p>We will use <code>apptainer</code> to manage our software dependencies. Here are the aliases we will use:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> prefetch=<span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fasterq-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fastp=<span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> STAR=<span class="st">"apptainer exec docker://quay.io/biocontainers/star:2.7.11b--h5ca1c30_6 STAR"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> samtools=<span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="variable" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="variable"><span class="header-section-number">2</span> Variable</h2>
+<pre><code>export SRR_RNA="SRR10123445"
+export SN=Fo47
+export NCPUS=12
+export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"</code></pre>
+</section>
+<section id="create-fungi-protein-database-from-orthodb" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="create-fungi-protein-database-from-orthodb"><span class="header-section-number">3</span> Create Fungi Protein Database from OrthoDB</h2>
+<p>We will create a custom protein database containing only Fungi sequences from OrthoDB.</p>
+<p>First, let’s create a directory and download the necessary files.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/orthodb</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://data.orthodb.org/current/download/odb12v1_aa_fasta.gz <span class="at">-O</span> 08-data/orthodb/odb12v1_aa_fasta.gz</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://data.orthodb.org/current/download/odb12v1_levels.tab.gz <span class="at">-O</span> 08-data/orthodb/odb12v1_levels.tab.gz</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://data.orthodb.org/current/download/odb12v1_level2species.tab.gz <span class="at">-O</span> 08-data/orthodb/odb12v1_level2species.tab.gz</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">gunzip</span> 08-data/orthodb/<span class="pp">*</span>.gz</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://raw.githubusercontent.com/tomasbruna/orthodb-clades/master/selectClade.py <span class="at">-O</span> 08-data/orthodb/selectClade.py</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x 08-data/orthodb/selectClade.py</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now, we can run the script to select the Fungi sequences.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./08-data/orthodb/selectClade.py</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  08-data/orthodb/odb12v1_aa_fasta <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  08-data/orthodb/odb12v1_levels.tab <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  08-data/orthodb/odb12v1_level2species.tab <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  Fungi <span class="op">&gt;</span> 08-data/orthodb/Fungi.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="fetch-and-clean-rna-seq-reads" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="fetch-and-clean-rna-seq-reads"><span class="header-section-number">4</span> Fetch and Clean RNA-Seq Reads</h2>
+<p>We will download RNA-Seq data from the SRA and clean it to remove low-quality reads and adapters.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/reads</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">prefetch</span> <span class="va">$SRR_RNA</span> <span class="at">-O</span> 08-data/reads</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">fasterq-dump</span> <span class="va">$SRR_RNA</span> <span class="at">-O</span> 08-data/reads</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">fastp</span> <span class="at">-i</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.fastq <span class="at">-I</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_2.fastq <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-o</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.clean.fastq.gz <span class="at">-O</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_2.clean.fastq.gz <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">--html</span> 08-data/reads/<span class="va">${SRR_RNA}</span>.fastp.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="align-rna-seq-reads-with-star" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="align-rna-seq-reads-with-star"><span class="header-section-number">5</span> Align RNA-Seq Reads with STAR</h2>
+<p>Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/star/INDEX</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runThreadN</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--runMode</span> genomeGenerate <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeDir</span> 08-data/star/INDEX <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeFastaFiles</span> <span class="va">$assembly</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runThreadN</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">--genomeDir</span> 08-data/star/INDEX <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">--readFilesIn</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.clean.fastq.gz 08-data/reads/<span class="va">${SRR_RNA}</span>_2.clean.fastq.gz <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">--readFilesCommand</span> zcat <span class="dt">\</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">--outFileNamePrefix</span> 08-data/star/<span class="va">$SN</span> <span class="dt">\</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">--outSAMtype</span> BAM SortedByCoordinate</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> flagstats 08-data/star/<span class="va">${SN}</span>.sorted.bam</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

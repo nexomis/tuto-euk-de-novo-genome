@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Julien Fouret">
 
-<title>Assembly Evaluation – De Novo Genome Assembly Tutorial</title>
+<title>Genome Annotation with BRAKER – De Novo Genome Assembly Tutorial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +20,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -176,7 +212,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#assembly-evaluation" id="toc-assembly-evaluation" class="nav-link active" data-scroll-target="#assembly-evaluation"><span class="header-section-number">1</span> Assembly Evaluation</a></li>
+  <li><a href="#genome-annotation-with-braker" id="toc-genome-annotation-with-braker" class="nav-link active" data-scroll-target="#genome-annotation-with-braker"><span class="header-section-number">9</span> Genome Annotation with BRAKER</a>
+  <ul class="collapse">
+  <li><a href="#configuration-and-setup" id="toc-configuration-and-setup" class="nav-link" data-scroll-target="#configuration-and-setup"><span class="header-section-number">9.1</span> Configuration and Setup</a>
+  <ul class="collapse">
+  <li><a href="#environment-variables" id="toc-environment-variables" class="nav-link" data-scroll-target="#environment-variables"><span class="header-section-number">9.1.1</span> Environment Variables</a></li>
+  <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">9.1.2</span> Software Dependencies</a></li>
+  </ul></li>
+  <li><a href="#annotation-strategy-1-proteins-only" id="toc-annotation-strategy-1-proteins-only" class="nav-link" data-scroll-target="#annotation-strategy-1-proteins-only"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only</a></li>
+  <li><a href="#annotation-strategy-2-proteins-rna-seq" id="toc-annotation-strategy-2-proteins-rna-seq" class="nav-link" data-scroll-target="#annotation-strategy-2-proteins-rna-seq"><span class="header-section-number">9.3</span> Annotation Strategy 2: Proteins + RNA-Seq</a></li>
+  <li><a href="#expected-outputs" id="toc-expected-outputs" class="nav-link" data-scroll-target="#expected-outputs"><span class="header-section-number">9.4</span> Expected Outputs</a></li>
+  </ul></li>
   </ul>
 </nav>
 </nav>
@@ -189,13 +235,19 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Assembly Evaluation</h1>
+<h1 class="title">Genome Annotation with BRAKER</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julien Fouret </p>
+          </div>
+  </div>
     
   
     
@@ -206,11 +258,88 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="assembly-evaluation" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Assembly Evaluation</h1>
-<p>Content for Assembly Evaluation.</p>
+<section id="genome-annotation-with-braker" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Genome Annotation with BRAKER</h1>
+<p>In this chapter, we will perform genome annotation using BRAKER, a powerful pipeline for fully automated gene prediction in eukaryotic genomes. We will use the assembly of <em>Fusarium oxysporum</em> f.&nbsp;sp. <em>lycopersici</em> strain Fo47 that we have been working with.</p>
+<p>BRAKER combines GeneMark-ETP and AUGUSTUS, two highly accurate gene prediction tools, and can leverage evidence from RNA-Seq data and protein homology to improve annotation quality.</p>
+<section id="configuration-and-setup" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="configuration-and-setup"><span class="header-section-number">9.1</span> Configuration and Setup</h2>
+<section id="environment-variables" class="level3" data-number="9.1.1">
+<h3 data-number="9.1.1" class="anchored" data-anchor-id="environment-variables"><span class="header-section-number">9.1.1</span> Environment Variables</h3>
+<p>We will set up environment variables for our annotation workflow.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SN</span><span class="op">=</span>Fo47</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS</span><span class="op">=</span>12</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">assembly</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/07-repeats-analysis/rm_out/Fo47.fasta.masked"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">proteins</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/08-data/orthodb/Fungi.fa"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">rna_bam</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/08-data/star/</span><span class="va">${SN}</span><span class="st">.sorted.bam"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="software-dependencies" class="level3" data-number="9.1.2">
+<h3 data-number="9.1.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">9.1.2</span> Software Dependencies</h3>
+<p>We will use the official BRAKER3 container.</p>
+<section id="apptainer" class="level4" data-number="9.1.2.1">
+<h4 data-number="9.1.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">9.1.2.1</span> Apptainer</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> braker.pl=<span class="st">"apptainer run docker://teambraker/braker3:latest braker.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+</section>
+<section id="annotation-strategy-1-proteins-only" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="annotation-strategy-1-proteins-only"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only</h2>
+<p>In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.</p>
+<blockquote class="blockquote">
+<p><strong>A note on using existing species parameters:</strong> AUGUSTUS comes with pre-trained parameters for many species, including <em>Fusarium</em>. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform <em>de novo</em> training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The <code>--species</code> parameter in our <code>braker.pl</code> command gives a unique name to the new model that BRAKER will create.</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_only</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span><span class="va">$assembly</span> <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_only <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>BRAKER parameters explained:</strong></p>
+<ul>
+<li><code>--genome</code>: Path to the repeat-masked genome assembly.</li>
+<li><code>--prot_seq</code>: Path to the protein database (OrthoDB Fungi).</li>
+<li><code>--species</code>: A unique name for the species model being trained.</li>
+<li><code>--workingdir</code>: Directory to store the output files.</li>
+<li><code>--threads</code>: Number of CPU threads to use.</li>
+<li><code>--fungus</code>: Specifies to use the fungal branch point model, which is appropriate for our organism.</li>
+</ul>
+</section>
+<section id="annotation-strategy-2-proteins-rna-seq" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="annotation-strategy-2-proteins-rna-seq"><span class="header-section-number">9.3</span> Annotation Strategy 2: Proteins + RNA-Seq</h2>
+<p>Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the recommended approach as it combines homology-based evidence with transcriptomic evidence, leading to more accurate gene predictions.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_rna</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span><span class="va">$assembly</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bam</span><span class="op">=</span><span class="va">$rna_bam</span> <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot_rna <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_rna <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><strong>Additional BRAKER parameter:</strong></p>
+<ul>
+<li><code>--bam</code>: Path to the sorted BAM file containing aligned RNA-Seq reads.</li>
+</ul>
+</section>
+<section id="expected-outputs" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="expected-outputs"><span class="header-section-number">9.4</span> Expected Outputs</h2>
+<p>After running BRAKER, each working directory (<code>09-annot/prot_only</code> and <code>09-annot/prot_rna</code>) will contain several output files. The most important ones are:</p>
+<ul>
+<li><code>braker.gtf</code>: The final gene predictions in GTF format.</li>
+<li><code>braker.aa</code>: The predicted protein sequences in FASTA format.</li>
+<li><code>braker.codingseq</code>: The predicted coding sequences in FASTA format.</li>
+<li><code>GeneMark-EP/</code>: Directory containing GeneMark-EP output (for protein-only mode).</li>
+<li><code>GeneMark-ETP/</code>: Directory containing GeneMark-ETP output (for protein + RNA-Seq mode).</li>
+<li><code>Augustus/</code>: Directory containing AUGUSTUS output and trained models.</li>
+</ul>
+<p>You can compare the results from both strategies to see the impact of adding RNA-Seq evidence on the final gene annotations.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
