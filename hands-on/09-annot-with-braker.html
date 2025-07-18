@@ -189,6 +189,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../hands-on/10-annot-functional.html">
  <span class="dropdown-text">Functional Gene Annotation</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../hands-on/11-comparative-genomics.html">
+ <span class="dropdown-text">Comparative Genomics</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -271,14 +275,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS</span><span class="op">=</span>12</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">assembly</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/07-repeats-analysis/rm_out/Fo47.fasta.masked"</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">proteins</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/08-data/orthodb/Fungi.fa"</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">rna_bam</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/08-data/star/</span><span class="va">${SN}</span><span class="st">.sorted.bam"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">rna_bam</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/08-data/star/</span><span class="va">${SN}</span><span class="st">Aligned.sortedByCoord.out.bam"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="software-dependencies" class="level3" data-number="9.1.2">
 <h3 data-number="9.1.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">9.1.2</span> Software Dependencies</h3>
 <p>We will use the official BRAKER3 container.</p>
 <section id="apptainer" class="level4" data-number="9.1.2.1">
 <h4 data-number="9.1.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">9.1.2.1</span> Apptainer</h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> braker.pl=<span class="st">"apptainer run docker://teambraker/braker3:latest braker.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> braker.pl=<span class="st">"apptainer run --writable-tmpfs docker://teambraker/braker3:latest braker.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 </section>
@@ -289,9 +293,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>A note on using existing species parameters:</strong> AUGUSTUS comes with pre-trained parameters for many species, including <em>Fusarium</em>. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform <em>de novo</em> training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The <code>--species</code> parameter in our <code>braker.pl</code> command gives a unique name to the new model that BRAKER will create.</p>
 </blockquote>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_only</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span><span class="va">$assembly</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot <span class="dt">\</span></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_only <span class="dt">\</span></span>
@@ -311,15 +315,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="9.3" class="anchored" data-anchor-id="annotation-strategy-2-proteins-rna-seq"><span class="header-section-number">9.3</span> Annotation Strategy 2: Proteins + RNA-Seq</h2>
 <p>Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the recommended approach as it combines homology-based evidence with transcriptomic evidence, leading to more accurate gene predictions.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_rna</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span><span class="va">$assembly</span> <span class="dt">\</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bam</span><span class="op">=</span><span class="va">$rna_bam</span> <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot_rna <span class="dt">\</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_rna <span class="dt">\</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure to enforce simple name without space (better if integrated at the mapping step) </span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bam</span><span class="op">=</span><span class="va">$rna_bam</span> <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot_rna <span class="dt">\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_rna <span class="dt">\</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Additional BRAKER parameter:</strong></p>
 <ul>
 <li><code>--bam</code>: Path to the sorted BAM file containing aligned RNA-Seq reads.</li>

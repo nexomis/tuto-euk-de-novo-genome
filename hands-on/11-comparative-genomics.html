@@ -8,7 +8,7 @@
 
 <meta name="author" content="Julien Fouret">
 
-<title>Fetch Public Datasets – De Novo Genome Assembly Tutorial</title>
+<title>Comparative Genomics – De Novo Genome Assembly Tutorial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -216,16 +216,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#fetch-public-datasets" id="toc-fetch-public-datasets" class="nav-link active" data-scroll-target="#fetch-public-datasets"><span class="header-section-number">1</span> Fetch Public datasets</a>
+  <li><a href="#comparative-phylogenomics" id="toc-comparative-phylogenomics" class="nav-link active" data-scroll-target="#comparative-phylogenomics"><span class="header-section-number">11</span> Comparative (Phylo)genomics</a>
   <ul class="collapse">
-  <li><a href="#configuration-and-setup" id="toc-configuration-and-setup" class="nav-link" data-scroll-target="#configuration-and-setup"><span class="header-section-number">1.1</span> Configuration and Setup</a>
+  <li><a href="#environment-setup" id="toc-environment-setup" class="nav-link" data-scroll-target="#environment-setup"><span class="header-section-number">11.1</span> Environment Setup</a>
   <ul class="collapse">
-  <li><a href="#environment-variables" id="toc-environment-variables" class="nav-link" data-scroll-target="#environment-variables"><span class="header-section-number">1.1.1</span> Environment Variables</a></li>
-  <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">1.1.2</span> Software dependencies</a></li>
+  <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">11.1.1</span> Software Dependencies</a></li>
+  <li><a href="#conda" id="toc-conda" class="nav-link" data-scroll-target="#conda"><span class="header-section-number">11.1.2</span> Conda</a></li>
   </ul></li>
-  <li><a href="#fetch-illumina-data" id="toc-fetch-illumina-data" class="nav-link" data-scroll-target="#fetch-illumina-data"><span class="header-section-number">1.2</span> Fetch Illumina data</a></li>
-  <li><a href="#fetch-nanopore-data" id="toc-fetch-nanopore-data" class="nav-link" data-scroll-target="#fetch-nanopore-data"><span class="header-section-number">1.3</span> Fetch Nanopore data</a></li>
-  <li><a href="#expected-outputs" id="toc-expected-outputs" class="nav-link" data-scroll-target="#expected-outputs"><span class="header-section-number">1.4</span> Expected outputs</a></li>
+  <li><a href="#generating-a-neutral-model-with-phylofit" id="toc-generating-a-neutral-model-with-phylofit" class="nav-link" data-scroll-target="#generating-a-neutral-model-with-phylofit"><span class="header-section-number">11.2</span> Generating a Neutral Model with phyloFit</a></li>
+  <li><a href="#predicting-conserved-elements-with-phast" id="toc-predicting-conserved-elements-with-phast" class="nav-link" data-scroll-target="#predicting-conserved-elements-with-phast"><span class="header-section-number">11.3</span> Predicting Conserved Elements with PHAST</a>
+  <ul class="collapse">
+  <li><a href="#phastcons" id="toc-phastcons" class="nav-link" data-scroll-target="#phastcons"><span class="header-section-number">11.3.1</span> phastCons</a></li>
+  <li><a href="#phylop" id="toc-phylop" class="nav-link" data-scroll-target="#phylop"><span class="header-section-number">11.3.2</span> phyloP</a></li>
+  </ul></li>
+  <li><a href="#finding-orthologs-with-orthofinder" id="toc-finding-orthologs-with-orthofinder" class="nav-link" data-scroll-target="#finding-orthologs-with-orthofinder"><span class="header-section-number">11.4</span> Finding Orthologs with OrthoFinder</a>
+  <ul class="collapse">
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation"><span class="header-section-number">11.4.1</span> Data Preparation</a></li>
+  <li><a href="#running-orthofinder" id="toc-running-orthofinder" class="nav-link" data-scroll-target="#running-orthofinder"><span class="header-section-number">11.4.2</span> Running OrthoFinder</a></li>
+  </ul></li>
+  <li><a href="#downstream-analysis-of-orthologs" id="toc-downstream-analysis-of-orthologs" class="nav-link" data-scroll-target="#downstream-analysis-of-orthologs"><span class="header-section-number">11.5</span> Downstream Analysis of Orthologs</a>
+  <ul class="collapse">
+  <li><a href="#phylogenetic-analysis" id="toc-phylogenetic-analysis" class="nav-link" data-scroll-target="#phylogenetic-analysis"><span class="header-section-number">11.5.1</span> Phylogenetic Analysis</a></li>
+  <li><a href="#evolutionary-analysis-with-hyphy-and-paml" id="toc-evolutionary-analysis-with-hyphy-and-paml" class="nav-link" data-scroll-target="#evolutionary-analysis-with-hyphy-and-paml"><span class="header-section-number">11.5.2</span> Evolutionary Analysis with HyPhy and PAML</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -239,7 +252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Fetch Public Datasets</h1>
+<h1 class="title">Comparative Genomics</h1>
 </div>
 
 
@@ -262,106 +275,146 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="fetch-public-datasets" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Fetch Public datasets</h1>
-<p>In this tutorial, we will download publicly available genomic datasets from the NCBI Sequence Read Archive (SRA). This is a common first step in genomic analysis workflows, allowing researchers to access high-quality sequencing data for comparative studies or method development.</p>
-<p>We have selected <a href="#0">PRJNA721899</a> in which 6 differently virulent strains of <em>use QUAST for eval.<br>
-</em>were sequenced using both Illumina (short-read) and Oxford Nanopore (long-read) technologies. This dual-platform approach provides complementary data types ideal for hybrid genome assembly.</p>
-<p>We will focus on sample <a href="https://www.ebi.ac.uk/ena/browser/view/SAMN13621855?show=reads">SAMN13621855</a> which corresponds to strain 482, a pathogenic isolate that will serve as our model organism for this de novo genome assembly tutorial.</p>
-<p>This work was published in <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8248858/">PMC8248858</a>, providing valuable context about the biological significance of these strains.</p>
-<p><strong>Dataset overview:</strong></p>
+<section id="comparative-phylogenomics" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Comparative (Phylo)genomics</h1>
+<p>In this chapter, we will explore comparative genomics to gain insights into the evolutionary relationships and conserved elements among different fungal genomes. We will use tools like PHAST for conservation analysis and OrthoFinder for identifying orthologous gene families.</p>
+<section id="environment-setup" class="level2" data-number="11.1">
+<h2 data-number="11.1" class="anchored" data-anchor-id="environment-setup"><span class="header-section-number">11.1</span> Environment Setup</h2>
+<section id="software-dependencies" class="level3" data-number="11.1.1">
+<h3 data-number="11.1.1" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">11.1.1</span> Software Dependencies</h3>
+<p>We will use several tools for this analysis. Here’s how to set them up using containers.</p>
+<section id="apptainer-docker" class="level4" data-number="11.1.1.1">
+<h4 data-number="11.1.1.1" class="anchored" data-anchor-id="apptainer-docker"><span class="header-section-number">11.1.1.1</span> Apptainer / Docker</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For PHAST tools</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> phyloFit=<span class="st">"apptainer run docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.9 phyloFit"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> phyloP=<span class="st">"apptainer run docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.9 phyloP"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> phastCons=<span class="st">"apptainer run docker://quay.io/comparative-genomics-toolkit/cactus:v2.9.9 phastCons"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># For OrthoFinder</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> orthofinder=<span class="st">"apptainer run docker://quay.io/biocontainers/orthofinder:3.1.0--hdfd78af_0 orthofinder"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="conda" class="level3" data-number="11.1.2">
+<h3 data-number="11.1.2" class="anchored" data-anchor-id="conda"><span class="header-section-number">11.1.2</span> Conda</h3>
+<p>You can also create a conda environment with the necessary tools.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> compgenomics <span class="at">-c</span> bioconda phast orthofinder</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate compgenomics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="generating-a-neutral-model-with-phylofit" class="level2" data-number="11.2">
+<h2 data-number="11.2" class="anchored" data-anchor-id="generating-a-neutral-model-with-phylofit"><span class="header-section-number">11.2</span> Generating a Neutral Model with phyloFit</h2>
+<p>Before running <code>phastCons</code> or <code>phyloP</code>, we need a phylogenetic model of neutral evolution. This model, typically in a <code>.mod</code> file, can be generated using <code>phyloFit</code>, a tool from the PHAST package.</p>
+<p><code>phyloFit</code> requires a tree topology. This tree can be derived from: - The phylogenetic tree generated during the scaffolding step (e.g., from JolyTree in chapter 06). - A known species tree from taxonomic databases.</p>
+<p>Here is an example of how to run <code>phyloFit</code> with a given tree and alignment:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We can use the tree from the scaffolding chapter</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The MAF file also comes from the scaffolding chapter</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">TREE</span><span class="op">=</span><span class="st">"((ME23,(ZUM2407,(V032g,Fo47))),tuto482);"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MAF_FILE</span><span class="op">=</span><span class="st">"06-scaffolding/cactus/alignment.maf"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$TREE</span><span class="st">"</span> <span class="op">&gt;</span> tree.nwk</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># The tree needs to be in Newick format, e.g., "((sp1,sp2),sp3);"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's assume we have a file `tree.nwk` with the tree.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="ex">phyloFit</span> <span class="at">--tree</span> tree.nwk <span class="at">--subst-mod</span> REV <span class="at">--out-root</span> neutral_model <span class="va">${MAF_FILE}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This will generate <code>neutral_model.mod</code>, which we can use in the next steps.</p>
+</section>
+<section id="predicting-conserved-elements-with-phast" class="level2" data-number="11.3">
+<h2 data-number="11.3" class="anchored" data-anchor-id="predicting-conserved-elements-with-phast"><span class="header-section-number">11.3</span> Predicting Conserved Elements with PHAST</h2>
+<p>PHAST (PHylogenetic Analysis with Space/Time models) is a software package for comparative and evolutionary genomics. It includes tools for predicting conserved elements and measuring evolutionary conservation.</p>
+<section id="phastcons" class="level3" data-number="11.3.1">
+<h3 data-number="11.3.1" class="anchored" data-anchor-id="phastcons"><span class="header-section-number">11.3.1</span> phastCons</h3>
+<p><code>phastCons</code> is used to predict conserved elements from a multiple alignment. It uses a phylogenetic hidden Markov model (phylo-HMM) to identify segments of a genome that are likely to be under negative selection.</p>
+<p>For more details, refer to the <a href="http://compgen.cshl.edu/phast/phastCons-tutorial.php">phastCons tutorial</a>.</p>
+<p>We can use the Multiple Alignment Format (MAF) file generated during the scaffolding step in chapter <code>06-scaffolding.qmd</code> and the neutral model we just created.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Path to the MAF file from chapter 06</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MAF_FILE</span><span class="op">=</span><span class="st">"06-scaffolding/cactus/alignment.maf"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NEUTRAL_MODEL</span><span class="op">=</span><span class="st">"neutral_model.mod"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run phastCons</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">phastCons</span> <span class="at">--target-coverage</span> 0.3 <span class="at">--expected-length</span> 45 <span class="va">$MAF_FILE</span> <span class="va">$NEUTRAL_MODEL</span> <span class="at">--most-cons-regions</span> cons.bed <span class="at">--score</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="phylop" class="level3" data-number="11.3.2">
+<h3 data-number="11.3.2" class="anchored" data-anchor-id="phylop"><span class="header-section-number">11.3.2</span> phyloP</h3>
+<p><code>phyloP</code> computes conservation or acceleration p-values based on a phylogenetic model. It can be used to identify specific sites that have evolved more slowly or more quickly than expected under a neutral model.</p>
+<p>For more details, see the <a href="http://compgen.cshl.edu/phast/phyloP-tutorial.php">phyloP tutorial</a>.</p>
+<section id="example-1-run-phylop-with-conacc-mode-and-lrt-method" class="level4" data-number="11.3.2.1">
+<h4 data-number="11.3.2.1" class="anchored" data-anchor-id="example-1-run-phylop-with-conacc-mode-and-lrt-method"><span class="header-section-number">11.3.2.1</span> Example 1: Run phyloP with CONACC mode and LRT method</h4>
+<p>This example demonstrates how to run <code>phyloP</code> with an alignment and our neutral model file using the CONACC (CONservation/ACCeleration) mode and the Likelihood Ratio Test (LRT) method.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using the MAF file and the neutral model</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">MAF_FILE</span><span class="op">=</span><span class="st">"06-scaffolding/cactus/alignment.maf"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NEUTRAL_MODEL</span><span class="op">=</span><span class="st">"neutral_model.mod"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">phyloP</span> <span class="at">--mode</span> CONACC <span class="at">--method</span> LRT <span class="at">--wig-scores</span> <span class="va">$NEUTRAL_MODEL</span> <span class="va">$MAF_FILE</span> <span class="op">&gt;</span> phyloP_scores.wig</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="branchsubtree-approaches" class="level4" data-number="11.3.2.2">
+<h4 data-number="11.3.2.2" class="anchored" data-anchor-id="branchsubtree-approaches"><span class="header-section-number">11.3.2.2</span> Branch/Subtree Approaches</h4>
+<p><code>phyloP</code> also supports analyzing specific branches or subtrees in the phylogenetic tree. This is useful for identifying lineage-specific conservation or acceleration. You can specify a subtree of interest using the <code>--subtree</code> option.</p>
+</section>
+</section>
+</section>
+<section id="finding-orthologs-with-orthofinder" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="finding-orthologs-with-orthofinder"><span class="header-section-number">11.4</span> Finding Orthologs with OrthoFinder</h2>
+<p>OrthoFinder is a fast, accurate, and scalable tool for inferring orthogroups, orthologs, and gene trees. It is widely used for comparative genomics studies.</p>
+<p>For a detailed guide, refer to the <a href="https://davidemms.github.io/orthofinder_tutorials/running-an-example-orthofinder-analysis.html">OrthoFinder tutorial</a>.</p>
+<section id="data-preparation" class="level3" data-number="11.4.1">
+<h3 data-number="11.4.1" class="anchored" data-anchor-id="data-preparation"><span class="header-section-number">11.4.1</span> Data Preparation</h3>
+<p>We need to gather the proteome files for the species we want to compare. For this analysis, we will use the proteomes of four <em>Fusarium</em> species and the one we annotated with BRAKER. It is a good practice to use only the longest transcript variant per gene to avoid inflating gene counts and improve accuracy.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create directories</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 11-comparative-genomics/orthofinder/proteomes</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 11-comparative-genomics/orthofinder/primary_transcripts</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Download proteomes</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_ASM1308505v1_protein.faa.gz <span class="at">-O</span> 11-comparative-genomics/orthofinder/proteomes/Fo47.faa.gz</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/048/165/035/GCA_048165035.1_ASM4816503v1/GCA_048165035.1_ASM4816503v1_protein.faa.gz <span class="at">-O</span> 11-comparative-genomics/orthofinder/proteomes/ZUM2407.faa.gz</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/048/164/945/GCA_048164945.1_ASM4816494v1/GCA_048164945.1_ASM4816494v1_protein.faa.gz <span class="at">-O</span> 11-comparative-genomics/orthofinder/proteomes/V032g.faa.gz</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/030/719/095/GCA_030719095.1_ASM3071909v1/GCA_030719095.1_ASM3071909v1_protein.faa.gz <span class="at">-O</span> 11-comparative-genomics/orthofinder/proteomes/ME23.faa.gz</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Decompress files</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">gunzip</span> 11-comparative-genomics/orthofinder/proteomes/<span class="pp">*</span>.gz</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy our annotated proteome</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Assuming the proteome from BRAKER (prot+rna) is the one to use</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> 09-annot/prot_rna/braker.aa 11-comparative-genomics/orthofinder/proteomes/our_strain.faa</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the script to select the longest transcript</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://raw.githubusercontent.com/davidemms/OrthoFinder/master/tools/primary_transcript.py <span class="at">-O</span> 11-comparative-genomics/orthofinder/primary_transcript.py</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x 11-comparative-genomics/orthofinder/primary_transcript.py</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the script on each proteome file</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> 11-comparative-genomics/orthofinder/proteomes/<span class="pp">*</span>.faa<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="ex">python</span> 11-comparative-genomics/orthofinder/primary_transcript.py <span class="va">$f</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Move the resulting primary transcript files to a dedicated directory</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> 11-comparative-genomics/orthofinder/proteomes/<span class="pp">*</span>_primary_transcript.fa 11-comparative-genomics/orthofinder/primary_transcripts/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="running-orthofinder" class="level3" data-number="11.4.2">
+<h3 data-number="11.4.2" class="anchored" data-anchor-id="running-orthofinder"><span class="header-section-number">11.4.2</span> Running OrthoFinder</h3>
+<p>Once the primary transcript files are ready, we can run OrthoFinder.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">orthofinder</span> <span class="at">-f</span> 11-comparative-genomics/orthofinder/primary_transcripts/ <span class="at">-o</span> 11-comparative-genomics/orthofinder/results/</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>OrthoFinder will create a results directory containing orthogroups, gene trees, and a species tree.</p>
+</section>
+</section>
+<section id="downstream-analysis-of-orthologs" class="level2" data-number="11.5">
+<h2 data-number="11.5" class="anchored" data-anchor-id="downstream-analysis-of-orthologs"><span class="header-section-number">11.5</span> Downstream Analysis of Orthologs</h2>
+<p>The orthogroups identified by OrthoFinder can be used for various downstream analyses to study gene evolution and function.</p>
+<section id="phylogenetic-analysis" class="level3" data-number="11.5.1">
+<h3 data-number="11.5.1" class="anchored" data-anchor-id="phylogenetic-analysis"><span class="header-section-number">11.5.1</span> Phylogenetic Analysis</h3>
 <ul>
-<li>Illumina paired-end data: <code>SRR14237206</code> (high accuracy, shorter reads)</li>
-<li>Oxford Nanopore data: <code>SRR14237202</code> (longer reads, higher error rate)</li>
+<li><strong>Use introns for robust phylogenies</strong>: For closely related species, introns can be used to build robust phylogenies as they are often less constrained by selection than coding sequences (neutral evolution).</li>
+<li><strong>Align CDS with MACSE / T-Coffee</strong>: Align the coding sequences (CDS) of single-copy orthologs. MACSE is particularly useful as it aligns sequences based on their amino acid translation, which helps in maintaining the reading frame. T-Coffee can also be used, driven by the protein alignment to guide the CDS alignment.</li>
 </ul>
-<section id="configuration-and-setup" class="level2" data-number="1.1">
-<h2 data-number="1.1" class="anchored" data-anchor-id="configuration-and-setup"><span class="header-section-number">1.1</span> Configuration and Setup</h2>
-<section id="environment-variables" class="level3" data-number="1.1.1">
-<h3 data-number="1.1.1" class="anchored" data-anchor-id="environment-variables"><span class="header-section-number">1.1.1</span> Environment Variables</h3>
-<p>First, we’ll set up environment variables to store our SRA accession numbers. This makes our scripts more readable and easier to modify:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRR_ILLUMINA</span><span class="op">=</span>SRR14237206</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SRR_NANOPORE</span><span class="op">=</span>SRR14237202</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#set a sample name (SN)</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SN</span><span class="op">=</span>tuto482</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>These variables will be used throughout the data download process to reference our specific datasets. The sample name (<code>SN</code>) provides a consistent identifier that will be used across all files, making it easier to track and organize data from multiple samples in larger projects.</p>
 </section>
-<section id="software-dependencies" class="level3" data-number="1.1.2">
-<h3 data-number="1.1.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">1.1.2</span> Software dependencies</h3>
-<p>To download data from the SRA, we need the <strong>SRA Tools</strong> package, which includes <code>prefetch</code> and <code>fasterq-dump</code> utilities. Additionally, we’ll use <strong>pigz</strong> for parallel compression of FASTQ files.</p>
-<p>Below are three different approaches to install and run these tools:</p>
-<p>We will use alias then for the rest of the tutorial to be agnostic from the.</p>
-<p>The use of sra-tools to fetch raw fastq is documented <a href="https://github.com/ncbi/sra-tools/wiki/08.-prefetch-and-fasterq-dump">here</a>.</p>
-<section id="apptainer" class="level4" data-number="1.1.2.1">
-<h4 data-number="1.1.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">1.1.2.1</span> Apptainer</h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> prefetch=<span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fasterq-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="docker" class="level4" data-number="1.1.2.2">
-<h4 data-number="1.1.2.2" class="anchored" data-anchor-id="docker"><span class="header-section-number">1.1.2.2</span> Docker</h4>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> prefetch=<span class="st">"docker run --rm -u </span><span class="va">$UID</span><span class="st">:</span><span class="va">$GID</span><span class="st"> -v </span><span class="dt">\$</span><span class="st">(pwd):/data -w /data ncbi/sra-tools prefetch"</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fasterq-dump=<span class="st">"docker run --rm -u </span><span class="va">$UID</span><span class="st">:</span><span class="va">$GID</span><span class="st"> -v </span><span class="dt">\$</span><span class="st">(pwd):/data -w /data ncbi/sra-tools fasterq-dump"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>Note:</strong> The <code>-v $(pwd):/data -w /data</code> flags mount your current directory to <code>/data</code> inside the container and set it as the working directory, ensuring downloaded files are accessible on your host system.</p>
-</section>
-<section id="conda" class="level4" data-number="1.1.2.3">
-<h4 data-number="1.1.2.3" class="anchored" data-anchor-id="conda"><span class="header-section-number">1.1.2.3</span> Conda</h4>
-<p>The SRA Tools package is available through the Bioconda channel. Create a dedicated conda environment for this tutorial:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new conda environment with sra-tools</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> create <span class="at">-n</span> sra-tools <span class="at">-c</span> bioconda sra-tools</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Activate the environment</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> activate sra-tools</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Once installed, the <code>prefetch</code> and <code>fasterq-dump</code> commands will be directly available in your PATH without needing aliases.</p>
-</section>
-</section>
-</section>
-<section id="fetch-illumina-data" class="level2" data-number="1.2">
-<h2 data-number="1.2" class="anchored" data-anchor-id="fetch-illumina-data"><span class="header-section-number">1.2</span> Fetch Illumina data</h2>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">## Prefetch the SRA file</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">prefetch</span> <span class="va">$SRR_ILLUMINA</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">## Extract Fastq from SRA</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">fasterq-dump</span> <span class="va">$SRR_ILLUMINA</span> <span class="at">--split-files</span> <span class="at">--progress</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">## Compress files</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pigz</span> <span class="at">-p</span> 8 <span class="va">${SRR_ILLUMINA}</span>_<span class="pp">*</span> </span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">## Clean</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> <span class="va">$SRR_ILLUMINA</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co">## Rename</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 01-rawdata/</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SRR_ILLUMINA}</span>_1.fastq.gz 01-rawdata/<span class="va">$SN</span>-illumina_R1.fastq.gz</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SRR_ILLUMINA}</span>_2.fastq.gz 01-rawdata/<span class="va">$SN</span>-illumina_R2.fastq.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<blockquote class="blockquote">
-<p>Note that this time, as the next, can be long to run; especially with a slow bandwidth.</p>
-</blockquote>
-</section>
-<section id="fetch-nanopore-data" class="level2" data-number="1.3">
-<h2 data-number="1.3" class="anchored" data-anchor-id="fetch-nanopore-data"><span class="header-section-number">1.3</span> Fetch Nanopore data</h2>
-<p>The Nanopore data download follows a similar workflow, but note that long-read data typically produces a single FASTQ file (unlike paired-end Illumina data):</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">## Download the Nanopore SRA file</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">prefetch</span> <span class="va">$SRR_NANOPORE</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">## Extract FASTQ from SRA (single file for long reads)</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">fasterq-dump</span> <span class="va">$SRR_NANOPORE</span> <span class="at">--split-files</span> <span class="at">--progress</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">## Compress the FASTQ file</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pigz</span> <span class="at">-p</span> 8 <span class="va">${SRR_NANOPORE}</span>.fastq </span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">## Clean up intermediate files</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> <span class="va">$SRR_NANOPORE</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">## Move to organized location with descriptive name</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="va">${SRR_NANOPORE}</span>.fastq.gz 01-rawdata/<span class="va">$SN</span>-nanopore.fastq.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>Expected output:</strong> A single compressed FASTQ file containing Oxford Nanopore long reads, stored in the <code>01-rawdata/</code> directory.</p>
-</section>
-<section id="expected-outputs" class="level2" data-number="1.4">
-<h2 data-number="1.4" class="anchored" data-anchor-id="expected-outputs"><span class="header-section-number">1.4</span> Expected outputs</h2>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> 01-rawdata</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">total</span> 3,4G</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">-rw-rw-r--</span> 1 jfouret jfouret 1,3G juil.  3 09:27 tuto482-illumina_R1.fastq.gz</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">-rw-rw-r--</span> 1 jfouret jfouret 1,4G juil.  3 09:27 tuto482-illumina_R2.fastq.gz</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">-rw-rw-r--</span> 1 jfouret jfouret 724M juil.  3 10:08 tuto482-nanopore.fastq.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="evolutionary-analysis-with-hyphy-and-paml" class="level3" data-number="11.5.2">
+<h3 data-number="11.5.2" class="anchored" data-anchor-id="evolutionary-analysis-with-hyphy-and-paml"><span class="header-section-number">11.5.2</span> Evolutionary Analysis with HyPhy and PAML</h3>
+<ul>
+<li><strong>HyPhy (Hypothesis Testing using Phylogenies)</strong>: Use the aligned CDS to test various evolutionary hypotheses, such as identifying sites under positive selection.</li>
+<li><strong>PAML (Phylogenetic Analysis by Maximum Likelihood)</strong>: Another powerful package for phylogenetic analysis of DNA or protein sequences. It can be used to estimate synonymous and non-synonymous substitution rates (dN/dS) to infer selective pressures.</li>
+</ul>
+<p>These analyses can provide deep insights into the evolutionary dynamics of gene families and help in understanding the functional diversification of species.</p>
 
 
+</section>
 </section>
 </section>
 

@@ -2,90 +2,94 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/tertiary-analysis/genome-annotation.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/scaffolding.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/concepts-genome-assembly.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/primary-analysis/preliminary-analysis.html</loc>
-    <lastmod>2025-07-18T13:06:14.761Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.765Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/more/reference-enabled-bioinformatics.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/index.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/09-annot-with-braker.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/07-repeats-analysis.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/05-assembly-evaluation.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/03-kmer-analysis.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/01-fetch-public-datasets.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/about.html</loc>
-    <lastmod>2025-07-18T13:06:14.745Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/02-primary-analysis.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/04-hybrid-assembly-spades-masurca.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/06-scaffolding.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
-  </url>
-  <url>
-    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/08-prepare-data-for-annotation.html</loc>
-    <lastmod>2025-07-18T13:06:14.746Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/10-annot-functional.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/08-prepare-data-for-annotation.html</loc>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/06-scaffolding.html</loc>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/04-hybrid-assembly-spades-masurca.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/02-primary-analysis.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/about.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/01-fetch-public-datasets.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/03-kmer-analysis.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/05-assembly-evaluation.html</loc>
+    <lastmod>2025-07-18T17:55:06.749Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/07-repeats-analysis.html</loc>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/09-annot-with-braker.html</loc>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
+  </url>
+  <url>
+    <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/11-comparative-genomics.html</loc>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/more/intro-nextflow.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.750Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/primary-analysis/base-calling-qc.html</loc>
-    <lastmod>2025-07-18T13:06:14.747Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.751Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/assembly-evaluation.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/contigs-de-novo-assembly.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/tertiary-analysis/comparative-genomics.html</loc>
-    <lastmod>2025-07-18T13:06:14.770Z</lastmod>
+    <lastmod>2025-07-18T17:55:06.774Z</lastmod>
   </url>
 </urlset>
