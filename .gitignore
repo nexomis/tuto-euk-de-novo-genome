@@ -11,3 +11,12 @@ _trash
 /hands-on/*
 !/hands-on/*.qmd
 
+# add hands-on/06-scaffolding/references/tuto482.fasta
+!/hands-on/06-scaffolding/
+/hands-on/06-scaffolding/*
+!/hands-on/06-scaffolding/references/
+/hands-on/06-scaffolding/references/*
+!/hands-on/06-scaffolding/references/tuto482.fasta.gz
+
+*_thesis.txt
+
