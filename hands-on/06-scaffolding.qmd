@@ -80,7 +80,14 @@ mv 06-scaffolding/references/GCF_013085055.1_ASM1308505v1_genomic.fna 06-scaffol
 mv 06-scaffolding/references/GCA_048165035.1_ASM4816503v1_genomic.fna 06-scaffolding/references/ZUM2407.fasta
 mv 06-scaffolding/references/GCA_048164945.1_ASM4816494v1_genomic.fna 06-scaffolding/references/V032g.fasta
 mv 06-scaffolding/references/GCA_030719095.1_ASM3071909v1_genomic.fna 06-scaffolding/references/ME23.fasta
-cp 04-assembly/masurca/option-A/flye*/assembly.fasta 06-scaffolding/references/${SN}.fasta
+
+# Rename fasta headers for Fo47 to have cleaner names (e.g., chr_I, chr_II)
+sed -i -E 's/>.*chromosome ([IVX]+),.*/>chr_\1/' 06-scaffolding/references/Fo47.fasta
+
+# cp 04-assembly/masurca/option-A/flye*/assembly.fasta 06-scaffolding/references/${SN}.fasta
+# dowload from repo if necessary
+wget -p hands-on/06-scaffolding/references https://raw.githubusercontent.com/nexomis/tuto-euk-de-novo-genome/refs/heads/main/hands-on/06-scaffolding/references/tuto482.fasta.gz 
+gunzip 06-scaffolding/references/*.gz
 ```
 
 ### Prepare Ragout Recipe File
