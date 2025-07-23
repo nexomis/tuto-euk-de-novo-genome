@@ -193,6 +193,8 @@ First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions.
 
 ``` bash
 BIND="--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
+mkdir -p 07-repeats-analysis/RepeatMasker/
+apptainer run docker://dfam/tetools:1.93 cp -r /opt/RepeatMasker/Libraries 07-repeats-analysis/RepeatMasker/
 alias tetools_lib="apptainer run $BIND docker://dfam/tetools:1.93"
 tetools_lib bash -c "rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config && cd /opt/RepeatMasker && ./tetoolsDfamUpdate.pl"
 ```
