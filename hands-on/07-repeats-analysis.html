@@ -239,7 +239,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#library-reconfiguration" id="toc-library-reconfiguration" class="nav-link" data-scroll-target="#library-reconfiguration"><span class="header-section-number">7.5.5</span> Library Reconfiguration</a></li>
   <li><a href="#combine-dfam-database-with-custom-library" id="toc-combine-dfam-database-with-custom-library" class="nav-link" data-scroll-target="#combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.6</span> Combine Dfam Database with Custom Library</a></li>
   </ul></li>
-  <li><a href="#running-repeatmasker-with-database-only" id="toc-running-repeatmasker-with-database-only" class="nav-link" data-scroll-target="#running-repeatmasker-with-database-only"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only</a>
+  <li><a href="#running-repeatmasker-with-database-only-not-recommended-go-combined" id="toc-running-repeatmasker-with-database-only-not-recommended-go-combined" class="nav-link" data-scroll-target="#running-repeatmasker-with-database-only-not-recommended-go-combined"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only (Not recommended –&gt; Go Combined)</a>
   <ul class="collapse">
   <li><a href="#execute-repeatmasker-with-dfam-only" id="toc-execute-repeatmasker-with-dfam-only" class="nav-link" data-scroll-target="#execute-repeatmasker-with-dfam-only"><span class="header-section-number">7.6.1</span> Execute RepeatMasker with Dfam Only</a></li>
   <li><a href="#expected-results" id="toc-expected-results" class="nav-link" data-scroll-target="#expected-results"><span class="header-section-number">7.6.2</span> Expected Results</a></li>
@@ -257,7 +257,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#understanding-repeatmasker-output-metrics" id="toc-understanding-repeatmasker-output-metrics" class="nav-link" data-scroll-target="#understanding-repeatmasker-output-metrics"><span class="header-section-number">7.9</span> Understanding RepeatMasker Output Metrics</a>
   <ul class="collapse">
   <li><a href="#kimura-substitution-level" id="toc-kimura-substitution-level" class="nav-link" data-scroll-target="#kimura-substitution-level"><span class="header-section-number">7.9.1</span> Kimura Substitution Level</a></li>
-  <li><a href="#why-genome-percentages-can-exceed-100" id="toc-why-genome-percentages-can-exceed-100" class="nav-link" data-scroll-target="#why-genome-percentages-can-exceed-100"><span class="header-section-number">7.9.2</span> Why Genome Percentages Can Exceed 100%</a></li>
   </ul></li>
   <li><a href="#repeatmasker-approaches--species-vs.-famdb.py-lib" id="toc-repeatmasker-approaches--species-vs.-famdb.py-lib" class="nav-link" data-scroll-target="#repeatmasker-approaches--species-vs.-famdb.py-lib"><span class="header-section-number">7.10</span> RepeatMasker Approaches: <code>-species</code> vs.&nbsp;<code>famdb.py/-lib</code></a>
   <ul class="collapse">
@@ -476,8 +475,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 </section>
 </section>
-<section id="running-repeatmasker-with-database-only" class="level2" data-number="7.6">
-<h2 data-number="7.6" class="anchored" data-anchor-id="running-repeatmasker-with-database-only"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only</h2>
+<section id="running-repeatmasker-with-database-only-not-recommended-go-combined" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="running-repeatmasker-with-database-only-not-recommended-go-combined"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only (Not recommended –&gt; Go Combined)</h2>
 <p>Before using the combined library, let’s first run RepeatMasker using only the Dfam database to see how much repetitive content can be identified with curated repeats alone. This will help us understand the contribution of the <em>de novo</em> RepeatModeler families.</p>
 <section id="execute-repeatmasker-with-dfam-only" class="level3" data-number="7.6.1">
 <h3 data-number="7.6.1" class="anchored" data-anchor-id="execute-repeatmasker-with-dfam-only"><span class="header-section-number">7.6.1</span> Execute RepeatMasker with Dfam Only</h3>
@@ -592,32 +591,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Transition mutations (A↔︎G, C↔︎T) occurring more frequently than transversions</li>
 <li>Multiple substitutions at the same position (back-mutations)</li>
 <li>Saturation effects in highly diverged sequences</li>
-</ul>
-</section>
-<section id="why-genome-percentages-can-exceed-100" class="level3" data-number="7.9.2">
-<h3 data-number="7.9.2" class="anchored" data-anchor-id="why-genome-percentages-can-exceed-100"><span class="header-section-number">7.9.2</span> Why Genome Percentages Can Exceed 100%</h3>
-<p>In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:</p>
-<p><strong>1. Overlapping Annotations:</strong></p>
-<ul>
-<li>Different repeat families may overlap in the same genomic region</li>
-<li>Nested transposable elements (one inserted within another)</li>
-<li>RepeatMasker reports each identified repeat separately, even if they overlap</li>
-</ul>
-<p><strong>2. Fragmented Repeat Detection:</strong></p>
-<ul>
-<li>Large repeats broken by mutations may be detected as multiple smaller fragments</li>
-<li>Each fragment contributes to the total count</li>
-<li>The sum of fragments may exceed the actual genomic space occupied</li>
-</ul>
-<p><strong>3. Reference vs.&nbsp;Assembly Differences:</strong> - Percentages are calculated relative to the <strong>assembly size</strong>, not the “true” genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated</p>
-<p><strong>4. Calculation Method:</strong> RepeatMasker calculates percentages as:</p>
-<pre><code>Percentage = (Total bp of identified repeats / Assembly size) × 100</code></pre>
-<p>The “Total bp of identified repeats” includes all overlapping regions, which can exceed the actual physical space occupied.</p>
-<p><strong>Interpreting the Results:</strong></p>
-<ul>
-<li>Focus on <strong>relative proportions</strong> between repeat classes rather than absolute percentages</li>
-<li>Use the <strong>masked assembly</strong> to see the actual genomic regions covered by repeats</li>
-<li>Consider the <strong>non-redundant repeat content</strong> for more accurate genome composition estimates</li>
 </ul>
 </section>
 </section>
