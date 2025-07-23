@@ -441,11 +441,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="library-reconfiguration" class="level3" data-number="7.5.5">
 <h3 data-number="7.5.5" class="anchored" data-anchor-id="library-reconfiguration"><span class="header-section-number">7.5.5</span> Library Reconfiguration</h3>
 <p>First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We’ll use a bind mount to provide our custom libraries to the container and run the update script:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">BIND</span><span class="op">=</span><span class="st">"--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/RepeatMasker/</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> run docker://dfam/tetools:1.93 cp <span class="at">-r</span> /opt/RepeatMasker/Libraries 07-repeats-analysis/RepeatMasker/</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools_lib=<span class="st">"apptainer run </span><span class="va">$BIND</span><span class="st"> docker://dfam/tetools:1.93"</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> bash <span class="at">-c</span> <span class="st">"rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config &amp;&amp; cd /opt/RepeatMasker &amp;&amp; ./tetoolsDfamUpdate.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">BIND</span><span class="op">=</span><span class="st">"--bind </span><span class="va">$PWD</span><span class="st">/07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">WARNING</span><span class="co"> ENSURE (SEE </span><span class="al">TASK</span><span class="co"> ABOVE)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># - The following folder exist 07-repeats-analysis/RepeatMasker/Libraries</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># - *h5 files were copied</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools_lib=<span class="st">"apptainer run </span><span class="va">$BIND</span><span class="st"> docker://dfam/tetools:1.93"</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> bash <span class="at">-c</span> <span class="st">"rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config &amp;&amp; cd /opt/RepeatMasker &amp;&amp; ./tetoolsDfamUpdate.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>This command:</p>
 <ul>
 <li>Binds our local <code>Libraries</code> directory to <code>/opt/RepeatMasker/Libraries</code> in the container</li>

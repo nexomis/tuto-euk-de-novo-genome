@@ -2,94 +2,94 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/tertiary-analysis/genome-annotation.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/scaffolding.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/concepts-genome-assembly.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/primary-analysis/preliminary-analysis.html</loc>
-    <lastmod>2025-07-23T11:38:38.964Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.107Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/more/reference-enabled-bioinformatics.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/index.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/10-annot-functional.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/08-prepare-data-for-annotation.html</loc>
-    <lastmod>2025-07-23T11:38:38.948Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/06-scaffolding.html</loc>
-    <lastmod>2025-07-23T11:38:38.929Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/04-hybrid-assembly-spades-masurca.html</loc>
-    <lastmod>2025-07-23T11:38:38.929Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/02-primary-analysis.html</loc>
-    <lastmod>2025-07-23T11:38:38.928Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/about.html</loc>
-    <lastmod>2025-07-23T11:38:38.928Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.071Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/01-fetch-public-datasets.html</loc>
-    <lastmod>2025-07-23T11:38:38.928Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/03-kmer-analysis.html</loc>
-    <lastmod>2025-07-23T11:38:38.928Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/05-assembly-evaluation.html</loc>
-    <lastmod>2025-07-23T11:38:38.929Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.072Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/07-repeats-analysis.html</loc>
-    <lastmod>2025-07-23T11:38:38.948Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/09-annot-with-braker.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/hands-on/11-comparative-genomics.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/more/intro-nextflow.html</loc>
-    <lastmod>2025-07-23T11:38:38.949Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.092Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/primary-analysis/base-calling-qc.html</loc>
-    <lastmod>2025-07-23T11:38:38.950Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.093Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/assembly-evaluation.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/secondary-analysis/contigs-de-novo-assembly.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
   <url>
     <loc>https://nexomis.github.io/tuto-euk-de-novo-genome/tertiary-analysis/comparative-genomics.html</loc>
-    <lastmod>2025-07-23T11:38:38.973Z</lastmod>
+    <lastmod>2025-07-23T12:26:55.116Z</lastmod>
   </url>
 </urlset>
