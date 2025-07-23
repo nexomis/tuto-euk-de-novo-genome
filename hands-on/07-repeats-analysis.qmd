@@ -235,7 +235,7 @@ This combined approach provides:
 2.  **Novel, species-specific repeats** identified by RepeatModeler
 3.  **Full compatibility** with RepeatMasker's `-lib` option
 
-## Running RepeatMasker with Database Only
+## Running RepeatMasker with Database Only (Not recommended –\> Go Combined)
 
 Before using the combined library, let's first run RepeatMasker using only the Dfam database to see how much repetitive content can be identified with curated repeats alone. This will help us understand the contribution of the *de novo* RepeatModeler families.
 
@@ -370,38 +370,6 @@ The Kimura distance accounts for:
 -   Transition mutations (A↔G, C↔T) occurring more frequently than transversions
 -   Multiple substitutions at the same position (back-mutations)
 -   Saturation effects in highly diverged sequences
-
-### Why Genome Percentages Can Exceed 100%
-
-In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:
-
-**1. Overlapping Annotations:**
-
--   Different repeat families may overlap in the same genomic region
--   Nested transposable elements (one inserted within another)
--   RepeatMasker reports each identified repeat separately, even if they overlap
-
-**2. Fragmented Repeat Detection:**
-
--   Large repeats broken by mutations may be detected as multiple smaller fragments
--   Each fragment contributes to the total count
--   The sum of fragments may exceed the actual genomic space occupied
-
-**3. Reference vs. Assembly Differences:** - Percentages are calculated relative to the **assembly size**, not the "true" genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated
-
-**4. Calculation Method:** RepeatMasker calculates percentages as:
-
-```         
-Percentage = (Total bp of identified repeats / Assembly size) × 100
-```
-
-The "Total bp of identified repeats" includes all overlapping regions, which can exceed the actual physical space occupied.
-
-**Interpreting the Results:**
-
--   Focus on **relative proportions** between repeat classes rather than absolute percentages
--   Use the **masked assembly** to see the actual genomic regions covered by repeats
--   Consider the **non-redundant repeat content** for more accurate genome composition estimates
 
 ## RepeatMasker Approaches: `-species` vs. `famdb.py/-lib`
 
