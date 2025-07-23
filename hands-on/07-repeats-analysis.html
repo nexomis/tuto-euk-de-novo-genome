@@ -236,7 +236,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#run-repeatmodeler" id="toc-run-repeatmodeler" class="nav-link" data-scroll-target="#run-repeatmodeler"><span class="header-section-number">7.5.2</span> Run RepeatModeler</a></li>
   <li><a href="#repeatmodeler-output" id="toc-repeatmodeler-output" class="nav-link" data-scroll-target="#repeatmodeler-output"><span class="header-section-number">7.5.3</span> RepeatModeler Output</a></li>
   <li><a href="#examine-repeatmodeler-results" id="toc-examine-repeatmodeler-results" class="nav-link" data-scroll-target="#examine-repeatmodeler-results"><span class="header-section-number">7.5.4</span> Examine RepeatModeler Results</a></li>
-  <li><a href="#combine-dfam-database-with-custom-library" id="toc-combine-dfam-database-with-custom-library" class="nav-link" data-scroll-target="#combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.5</span> Combine Dfam Database with Custom Library</a></li>
+  <li><a href="#library-reconfiguration" id="toc-library-reconfiguration" class="nav-link" data-scroll-target="#library-reconfiguration"><span class="header-section-number">7.5.5</span> Library Reconfiguration</a></li>
+  <li><a href="#combine-dfam-database-with-custom-library" id="toc-combine-dfam-database-with-custom-library" class="nav-link" data-scroll-target="#combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.6</span> Combine Dfam Database with Custom Library</a></li>
   </ul></li>
   <li><a href="#running-repeatmasker-with-database-only" id="toc-running-repeatmasker-with-database-only" class="nav-link" data-scroll-target="#running-repeatmasker-with-database-only"><span class="header-section-number">7.6</span> Running RepeatMasker with Database Only</a>
   <ul class="collapse">
@@ -245,8 +246,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#running-repeatmasker-with-combined-libraries" id="toc-running-repeatmasker-with-combined-libraries" class="nav-link" data-scroll-target="#running-repeatmasker-with-combined-libraries"><span class="header-section-number">7.7</span> Running RepeatMasker with Combined Libraries</a>
   <ul class="collapse">
-  <li><a href="#library-reconfiguration" id="toc-library-reconfiguration" class="nav-link" data-scroll-target="#library-reconfiguration"><span class="header-section-number">7.7.1</span> Library Reconfiguration</a></li>
-  <li><a href="#execute-repeatmasker" id="toc-execute-repeatmasker" class="nav-link" data-scroll-target="#execute-repeatmasker"><span class="header-section-number">7.7.2</span> Execute RepeatMasker</a></li>
+  <li><a href="#execute-repeatmasker" id="toc-execute-repeatmasker" class="nav-link" data-scroll-target="#execute-repeatmasker"><span class="header-section-number">7.7.1</span> Execute RepeatMasker</a></li>
   </ul></li>
   <li><a href="#visualizing-repeatmasker-results" id="toc-visualizing-repeatmasker-results" class="nav-link" data-scroll-target="#visualizing-repeatmasker-results"><span class="header-section-number">7.8</span> Visualizing RepeatMasker Results</a>
   <ul class="collapse">
@@ -337,7 +337,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="apptainer" class="level4" data-number="7.3.2.1">
 <h4 data-number="7.3.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">7.3.2.1</span> Apptainer</h4>
 <p>We will use an alias for the Apptainer command to simplify its usage.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools=<span class="st">"apptainer run docker://dfam/tetools:latest"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools=<span class="st">"apptainer run docker://dfam/tetools:1.93"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 </section>
@@ -391,7 +391,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>First, we need to create a database for RepeatModeler from our assembly:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 07-repeats-analysis/repeatmodeler</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools</span> BuildDatabase <span class="at">-name</span> <span class="va">${SN}</span> 07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>BuildDatabase parameters explained:</strong> - <code>-name</code>: Database name (we use our sample identifier) - Positional argument: Input assembly file</p>
+<p><strong>BuildDatabase parameters explained:</strong></p>
+<ul>
+<li><code>-name</code>: Database name (we use our sample identifier)</li>
+<li>Positional argument: Input assembly file</li>
+</ul>
 </section>
 <section id="run-repeatmodeler" class="level3" data-number="7.5.2">
 <h3 data-number="7.5.2" class="anchored" data-anchor-id="run-repeatmodeler"><span class="header-section-number">7.5.2</span> Run RepeatModeler</h3>
@@ -401,7 +405,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-threads</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-LTRStruct</span> <span class="dt">\</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> 07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>_repeatmodeler.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><strong>RepeatModeler parameters explained:</strong> - <code>-database</code>: Name of the database created with BuildDatabase - <code>-threads</code>: Number of parallel processes - <code>-LTRStruct</code>: Enable LTR structural analysis for better LTR identification</p>
+<p><strong>RepeatModeler parameters explained:</strong></p>
+<ul>
+<li><code>-database</code>: Name of the database created with BuildDatabase</li>
+<li><code>-threads</code>: Number of parallel processes</li>
+<li><code>-LTRStruct</code>: Enable LTR structural analysis for better LTR identification</li>
+</ul>
 </section>
 <section id="repeatmodeler-output" class="level3" data-number="7.5.3">
 <h3 data-number="7.5.3" class="anchored" data-anchor-id="repeatmodeler-output"><span class="header-section-number">7.5.3</span> RepeatModeler Output</h3>
@@ -429,19 +438,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-20</span> 07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The headers contain classification information when available (e.g., <code>&gt;rnd-1_family-174#LINE/L1</code>) or <code>#Unknown</code> for unclassified elements.</p>
 </section>
-<section id="combine-dfam-database-with-custom-library" class="level3" data-number="7.5.5">
-<h3 data-number="7.5.5" class="anchored" data-anchor-id="combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.5</span> Combine Dfam Database with Custom Library</h3>
+<section id="library-reconfiguration" class="level3" data-number="7.5.5">
+<h3 data-number="7.5.5" class="anchored" data-anchor-id="library-reconfiguration"><span class="header-section-number">7.5.5</span> Library Reconfiguration</h3>
+<p>First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We’ll use a bind mount to provide our custom libraries to the container and run the update script:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">BIND</span><span class="op">=</span><span class="st">"--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools_lib=<span class="st">"apptainer run </span><span class="va">$BIND</span><span class="st"> docker://dfam/tetools:1.93"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> bash <span class="at">-c</span> <span class="st">"rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config &amp;&amp; cd /opt/RepeatMasker &amp;&amp; ./tetoolsDfamUpdate.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This command:</p>
+<ul>
+<li>Binds our local <code>Libraries</code> directory to <code>/opt/RepeatMasker/Libraries</code> in the container</li>
+<li>Removes any existing configuration file</li>
+<li>Runs the update script to generate a new configuration based on our custom libraries</li>
+</ul>
+</section>
+<section id="combine-dfam-database-with-custom-library" class="level3" data-number="7.5.6">
+<h3 data-number="7.5.6" class="anchored" data-anchor-id="combine-dfam-database-with-custom-library"><span class="header-section-number">7.5.6</span> Combine Dfam Database with Custom Library</h3>
 <p>Since the <code>-lib</code> and <code>-species</code> options are not compatible, we need to create a combined library that includes both the Dfam fungi sequences and our RepeatModeler-generated families. We’ll use the <code>famdb.py</code> tool to extract fungi sequences from our downloaded famdb files.</p>
 <p>First, extract fungi sequences from the Dfam database using famdb.py:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract fungi sequences from Dfam using famdb.py</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> famdb.py <span class="at">-i</span> /opt/RepeatMasker/Libraries/famdb <span class="dt">\</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  families <span class="at">--format</span> fasta_name <span class="at">--ancestors</span> <span class="at">--descendants</span> <span class="st">'Fungi'</span> <span class="dt">\</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--include-class-in-name</span> <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract fungi sequences from Dfam using famdb.py</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> famdb.py <span class="at">-i</span> /opt/RepeatMasker/Libraries/famdb <span class="dt">\</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  families <span class="at">--format</span> fasta_name <span class="at">--ancestors</span> <span class="at">--descendants</span> <span class="st">'Fungi'</span> <span class="dt">\</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--include-class-in-name</span> <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Now combine the Dfam fungi sequences with our RepeatModeler families:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create combined library</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa <span class="dt">\</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa <span class="dt">\</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/<span class="va">${SN}</span>_combined.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create combined library</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 07-repeats-analysis/RepeatMasker/Libraries/dfam_fungi.fa <span class="dt">\</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    07-repeats-analysis/repeatmodeler/<span class="va">${SN}</span>-families.fa <span class="dt">\</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">&gt;</span> 07-repeats-analysis/RepeatMasker/Libraries/<span class="va">${SN}</span>_combined.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>This combined approach provides:</p>
 <ol type="1">
 <li><strong>Curated fungi repeats</strong> from the Dfam database</li>
@@ -456,13 +478,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="execute-repeatmasker-with-dfam-only" class="level3" data-number="7.6.1">
 <h3 data-number="7.6.1" class="anchored" data-anchor-id="execute-repeatmasker-with-dfam-only"><span class="header-section-number">7.6.1</span> Execute RepeatMasker with Dfam Only</h3>
 <p>Run RepeatMasker using only the species-specific Dfam database:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> RepeatMasker <span class="dt">\</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="dt">\</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-pa</span> <span class="va">$NPA</span> <span class="dt">\</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-species</span> fungi <span class="dt">\</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-dir</span> 07-repeats-analysis/rm_out_dfam_only <span class="dt">\</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-gff</span> <span class="dt">\</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta <span class="op">&gt;</span> 07-repeats-analysis/rm_out_dfam_only.log</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> RepeatMasker <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-pa</span> <span class="va">$NPA</span> <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-species</span> fungi <span class="dt">\</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-dir</span> 07-repeats-analysis/rm_out_dfam_only <span class="dt">\</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-gff</span> <span class="dt">\</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  07-repeats-analysis/assembly/<span class="va">${SN}</span>.fasta <span class="op">&gt;</span> 07-repeats-analysis/rm_out_dfam_only.log</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="expected-results" class="level3" data-number="7.6.2">
 <h3 data-number="7.6.2" class="anchored" data-anchor-id="expected-results"><span class="header-section-number">7.6.2</span> Expected Results</h3>
@@ -478,16 +500,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="running-repeatmasker-with-combined-libraries" class="level2" data-number="7.7">
 <h2 data-number="7.7" class="anchored" data-anchor-id="running-repeatmasker-with-combined-libraries"><span class="header-section-number">7.7</span> Running RepeatMasker with Combined Libraries</h2>
 <p>To run RepeatMasker with our custom libraries, we will use bind mounts. This approach mounts our local <code>Libraries</code> directory over the container’s <code>/opt/RepeatMasker/Libraries</code> directory, making our custom Dfam files available to RepeatMasker without requiring a writable container.</p>
-<section id="library-reconfiguration" class="level3" data-number="7.7.1">
-<h3 data-number="7.7.1" class="anchored" data-anchor-id="library-reconfiguration"><span class="header-section-number">7.7.1</span> Library Reconfiguration</h3>
-<p>First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We’ll use a bind mount to provide our custom libraries to the container and run the update script:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">BIND</span><span class="op">=</span><span class="st">"--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> tetools_lib=<span class="st">"apptainer run </span><span class="va">$BIND</span><span class="st"> docker://dfam/tetools:latest"</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> bash <span class="at">-c</span> <span class="st">"rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config &amp;&amp; cd /opt/RepeatMasker &amp;&amp; ./tetoolsDfamUpdate.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>This command: - Binds our local <code>Libraries</code> directory to <code>/opt/RepeatMasker/Libraries</code> in the container - Removes any existing configuration file - Runs the update script to generate a new configuration based on our custom libraries</p>
-</section>
-<section id="execute-repeatmasker" class="level3" data-number="7.7.2">
-<h3 data-number="7.7.2" class="anchored" data-anchor-id="execute-repeatmasker"><span class="header-section-number">7.7.2</span> Execute RepeatMasker</h3>
+<section id="execute-repeatmasker" class="level3" data-number="7.7.1">
+<h3 data-number="7.7.1" class="anchored" data-anchor-id="execute-repeatmasker"><span class="header-section-number">7.7.1</span> Execute RepeatMasker</h3>
 <p>Now we can run RepeatMasker on our assembly, again using the bind mount to provide our custom libraries:</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tetools_lib</span> RepeatMasker <span class="dt">\</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-a</span> <span class="dt">\</span></span>
@@ -549,7 +563,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The <code>.tbl</code> file provides a comprehensive summary of repeat content:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View the repeat summary table</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 07-repeats-analysis/rm_out/<span class="va">${SN}</span>.fasta.tbl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>This table shows: - Total repeat content percentage - Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.) - Interspersed repeats vs.&nbsp;small RNA - Low complexity and simple repeat content</p>
+<p>This table shows:</p>
+<ul>
+<li>Total repeat content percentage</li>
+<li>Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.)</li>
+<li>Interspersed repeats vs.&nbsp;small RNA</li>
+<li>Low complexity and simple repeat content</li>
+</ul>
 </section>
 </section>
 <section id="understanding-repeatmasker-output-metrics" class="level2" data-number="7.9">
@@ -563,18 +583,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Medium values (5-20%)</strong>: Moderately aged repeats with accumulated mutations</li>
 <li><strong>High values (&gt;20%)</strong>: Ancient repeats that have significantly diverged from their original sequence</li>
 </ul>
-<p>The Kimura distance accounts for: - Transition mutations (A↔︎G, C↔︎T) occurring more frequently than transversions - Multiple substitutions at the same position (back-mutations) - Saturation effects in highly diverged sequences</p>
+<p>The Kimura distance accounts for:</p>
+<ul>
+<li>Transition mutations (A↔︎G, C↔︎T) occurring more frequently than transversions</li>
+<li>Multiple substitutions at the same position (back-mutations)</li>
+<li>Saturation effects in highly diverged sequences</li>
+</ul>
 </section>
 <section id="why-genome-percentages-can-exceed-100" class="level3" data-number="7.9.2">
 <h3 data-number="7.9.2" class="anchored" data-anchor-id="why-genome-percentages-can-exceed-100"><span class="header-section-number">7.9.2</span> Why Genome Percentages Can Exceed 100%</h3>
 <p>In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:</p>
-<p><strong>1. Overlapping Annotations:</strong> - Different repeat families may overlap in the same genomic region - Nested transposable elements (one inserted within another) - RepeatMasker reports each identified repeat separately, even if they overlap</p>
-<p><strong>2. Fragmented Repeat Detection:</strong> - Large repeats broken by mutations may be detected as multiple smaller fragments - Each fragment contributes to the total count - The sum of fragments may exceed the actual genomic space occupied</p>
+<p><strong>1. Overlapping Annotations:</strong></p>
+<ul>
+<li>Different repeat families may overlap in the same genomic region</li>
+<li>Nested transposable elements (one inserted within another)</li>
+<li>RepeatMasker reports each identified repeat separately, even if they overlap</li>
+</ul>
+<p><strong>2. Fragmented Repeat Detection:</strong></p>
+<ul>
+<li>Large repeats broken by mutations may be detected as multiple smaller fragments</li>
+<li>Each fragment contributes to the total count</li>
+<li>The sum of fragments may exceed the actual genomic space occupied</li>
+</ul>
 <p><strong>3. Reference vs.&nbsp;Assembly Differences:</strong> - Percentages are calculated relative to the <strong>assembly size</strong>, not the “true” genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated</p>
 <p><strong>4. Calculation Method:</strong> RepeatMasker calculates percentages as:</p>
 <pre><code>Percentage = (Total bp of identified repeats / Assembly size) × 100</code></pre>
 <p>The “Total bp of identified repeats” includes all overlapping regions, which can exceed the actual physical space occupied.</p>
-<p><strong>Interpreting the Results:</strong> - Focus on <strong>relative proportions</strong> between repeat classes rather than absolute percentages - Use the <strong>masked assembly</strong> to see the actual genomic regions covered by repeats - Consider the <strong>non-redundant repeat content</strong> for more accurate genome composition estimates</p>
+<p><strong>Interpreting the Results:</strong></p>
+<ul>
+<li>Focus on <strong>relative proportions</strong> between repeat classes rather than absolute percentages</li>
+<li>Use the <strong>masked assembly</strong> to see the actual genomic regions covered by repeats</li>
+<li>Consider the <strong>non-redundant repeat content</strong> for more accurate genome composition estimates</li>
+</ul>
 </section>
 </section>
 <section id="repeatmasker-approaches--species-vs.-famdb.py-lib" class="level2" data-number="7.10">
@@ -582,22 +622,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>RepeatMasker offers different strategies for accessing repeat libraries, each with distinct advantages and coverage levels:</p>
 <section id="species-approach-narrow-coverage" class="level3" data-number="7.10.1">
 <h3 data-number="7.10.1" class="anchored" data-anchor-id="species-approach-narrow-coverage"><span class="header-section-number">7.10.1</span> <code>-species</code> Approach (Narrow Coverage)</h3>
-<p>The <code>-species fungi</code> option uses RepeatMasker’s built-in species-specific filtering: - <strong>Curated selection</strong>: RepeatMasker selects only well-characterized repeats specific to the taxonomic group - <strong>Conservative approach</strong>: Focuses on high-confidence, validated repeat families - <strong>Limited coverage</strong>: May miss divergent or poorly characterized repeats - <strong>Expected result</strong>: ~1% repeat content for Fusarium (minimal coverage)</p>
+<p>The <code>-species fungi</code> option uses RepeatMasker’s built-in species-specific filtering:</p>
+<ul>
+<li><strong>Curated selection</strong>: RepeatMasker selects only well-characterized repeats specific to the taxonomic group</li>
+<li><strong>Conservative approach</strong>: Focuses on high-confidence, validated repeat families</li>
+<li><strong>Limited coverage</strong>: May miss divergent or poorly characterized repeats</li>
+<li><strong>Expected result</strong>: ~1% repeat content for Fusarium (minimal coverage)</li>
+</ul>
 </section>
 <section id="famdb.py-with---ancestors---descendants-broad-coverage" class="level3" data-number="7.10.2">
 <h3 data-number="7.10.2" class="anchored" data-anchor-id="famdb.py-with---ancestors---descendants-broad-coverage"><span class="header-section-number">7.10.2</span> <code>famdb.py</code> with <code>--ancestors --descendants</code> (Broad Coverage)</h3>
-<p>Using <code>famdb.py</code> to extract repeats allows more comprehensive library construction: - <strong>Taxonomic breadth</strong>: Includes repeats from ancestral and descendant taxonomic groups - <strong>Comprehensive coverage</strong>: Captures more divergent repeat families that may be present - <strong>Custom control</strong>: Allows fine-tuning of taxonomic scope - <strong>Expected result</strong>: Higher repeat detection rate (not tested in this tutorial, but likely &gt;5%)</p>
+<p>Using <code>famdb.py</code> to extract repeats allows more comprehensive library construction:</p>
+<ul>
+<li><strong>Taxonomic breadth</strong>: Includes repeats from ancestral and descendant taxonomic groups</li>
+<li><strong>Comprehensive coverage</strong>: Captures more divergent repeat families that may be present</li>
+<li><strong>Expected result</strong>: Higher repeat detection rate (not tested in this tutorial, but likely &gt;5%)</li>
+</ul>
 </section>
 <section id="combined-approach-dfam-repeatmodeler" class="level3" data-number="7.10.3">
 <h3 data-number="7.10.3" class="anchored" data-anchor-id="combined-approach-dfam-repeatmodeler"><span class="header-section-number">7.10.3</span> Combined Approach: Dfam + RepeatModeler</h3>
-<p>The most comprehensive strategy combines curated and <em>de novo</em> identified repeats: - <strong>Dfam coverage</strong>: Curated, well-characterized repeat families via <code>famdb.py</code> - <strong>Species-specific coverage</strong>: Novel repeats identified by RepeatModeler - <strong>Maximum sensitivity</strong>: Captures both known and novel repetitive elements - <strong>Expected result</strong>: ~11% repeat content (most comprehensive masking)</p>
+<p>The most comprehensive strategy combines curated and <em>de novo</em> identified repeats:</p>
+<ul>
+<li><strong>Dfam coverage</strong>: Curated, well-characterized repeat families via <code>famdb.py</code></li>
+<li><strong>Species-specific coverage</strong>: Novel repeats identified by RepeatModeler</li>
+<li><strong>Maximum sensitivity</strong>: Captures both known and novel repetitive elements</li>
+<li><strong>Expected result</strong>: ~11% repeat content (most comprehensive masking)</li>
+</ul>
 </section>
 </section>
 <section id="expected-repeat-content-results" class="level2" data-number="7.11">
 <h2 data-number="7.11" class="anchored" data-anchor-id="expected-repeat-content-results"><span class="header-section-number">7.11</span> Expected Repeat Content Results</h2>
 <p>Based on different RepeatMasker approaches, expected repeat content for this Fusarium assembly:</p>
-<p><strong>Tested approaches:</strong> - <strong>Using Dfam database alone</strong> (narrow with <code>-species fungi</code> option): ~1% repeat content (limited coverage) - <strong>Using <em>de novo</em> identified repeats only</strong> (RepeatModeler families): ~6% repeat content - <strong>Using combined approach</strong> (Dfam via <code>famdb.py</code> with ancestors/descendants + RepeatModeler): ~11% repeat content (comprehensive masking)</p>
-<p><strong>Not tested but expected:</strong> - <strong>Using Dfam only</strong> (broad via <code>famdb.py</code> with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)</p>
+<p><strong>Tested approaches:</strong></p>
+<ul>
+<li><strong>Using Dfam database alone</strong> (narrow with <code>-species fungi</code> option): ~1% repeat content (limited coverage)</li>
+<li><strong>Using <em>de novo</em> identified repeats only</strong> (RepeatModeler families): ~6% repeat content</li>
+<li><strong>Using combined approach</strong> (Dfam via <code>famdb.py</code> with ancestors/descendants + RepeatModeler): ~11% repeat content (comprehensive masking)</li>
+</ul>
+<p><strong>Not tested but expected:</strong></p>
+<ul>
+<li><strong>Using Dfam only</strong> (broad via <code>famdb.py</code> with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)</li>
+</ul>
 <p>The progression from 1% → 6% → 11% demonstrates the importance of combining curated databases with <em>de novo</em> repeat identification for comprehensive genome masking before gene annotation.</p>
 </section>
 <section id="file-outputs-and-organization" class="level2" data-number="7.12">
