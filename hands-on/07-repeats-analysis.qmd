@@ -192,9 +192,11 @@ The headers contain classification information when available (e.g., `>rnd-1_fam
 First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We'll use a bind mount to provide our custom libraries to the container and run the update script:
 
 ``` bash
-BIND="--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
-mkdir -p 07-repeats-analysis/RepeatMasker/
-apptainer run docker://dfam/tetools:1.93 cp -r /opt/RepeatMasker/Libraries 07-repeats-analysis/RepeatMasker/
+BIND="--bind $PWD/07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
+
+# WARNING ENSURE (SEE TASK ABOVE)
+# - The following folder exist 07-repeats-analysis/RepeatMasker/Libraries
+# - *h5 files were copied
 alias tetools_lib="apptainer run $BIND docker://dfam/tetools:1.93"
 tetools_lib bash -c "rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config && cd /opt/RepeatMasker && ./tetoolsDfamUpdate.pl"
 ```
