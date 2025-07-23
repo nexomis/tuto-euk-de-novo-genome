@@ -54,7 +54,7 @@ We will use the `dfam/tetools` container.
 We will use an alias for the Apptainer command to simplify its usage.
 
 ``` bash
-alias tetools="apptainer run docker://dfam/tetools:latest"
+alias tetools="apptainer run docker://dfam/tetools:1.93"
 ```
 
 ## Data Preparation
@@ -131,7 +131,10 @@ mkdir -p 07-repeats-analysis/repeatmodeler
 tetools BuildDatabase -name ${SN} 07-repeats-analysis/assembly/${SN}.fasta
 ```
 
-**BuildDatabase parameters explained:** - `-name`: Database name (we use our sample identifier) - Positional argument: Input assembly file
+**BuildDatabase parameters explained:**
+
+-   `-name`: Database name (we use our sample identifier)
+-   Positional argument: Input assembly file
 
 ### Run RepeatModeler
 
@@ -145,7 +148,11 @@ tetools RepeatModeler \
   > 07-repeats-analysis/repeatmodeler/${SN}_repeatmodeler.log 2>&1
 ```
 
-**RepeatModeler parameters explained:** - `-database`: Name of the database created with BuildDatabase - `-threads`: Number of parallel processes - `-LTRStruct`: Enable LTR structural analysis for better LTR identification
+**RepeatModeler parameters explained:**
+
+-   `-database`: Name of the database created with BuildDatabase
+-   `-threads`: Number of parallel processes
+-   `-LTRStruct`: Enable LTR structural analysis for better LTR identification
 
 ### RepeatModeler Output
 
@@ -179,6 +186,22 @@ head -20 07-repeats-analysis/repeatmodeler/${SN}-families.fa
 ```
 
 The headers contain classification information when available (e.g., `>rnd-1_family-174#LINE/L1`) or `#Unknown` for unclassified elements.
+
+### Library Reconfiguration
+
+First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We'll use a bind mount to provide our custom libraries to the container and run the update script:
+
+``` bash
+BIND="--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
+alias tetools_lib="apptainer run $BIND docker://dfam/tetools:1.93"
+tetools_lib bash -c "rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config && cd /opt/RepeatMasker && ./tetoolsDfamUpdate.pl"
+```
+
+This command:
+
+-   Binds our local `Libraries` directory to `/opt/RepeatMasker/Libraries` in the container
+-   Removes any existing configuration file
+-   Runs the update script to generate a new configuration based on our custom libraries
 
 ### Combine Dfam Database with Custom Library
 
@@ -239,18 +262,6 @@ This demonstrates why *de novo* repeat identification with RepeatModeler is cruc
 ## Running RepeatMasker with Combined Libraries
 
 To run RepeatMasker with our custom libraries, we will use bind mounts. This approach mounts our local `Libraries` directory over the container's `/opt/RepeatMasker/Libraries` directory, making our custom Dfam files available to RepeatMasker without requiring a writable container.
-
-### Library Reconfiguration
-
-First, we need to reconfigure RepeatMasker to recognize our new Dfam partitions. We'll use a bind mount to provide our custom libraries to the container and run the update script:
-
-``` bash
-BIND="--bind 07-repeats-analysis/RepeatMasker/Libraries:/opt/RepeatMasker/Libraries"
-alias tetools_lib="apptainer run $BIND docker://dfam/tetools:latest"
-tetools_lib bash -c "rm -f /opt/RepeatMasker/Libraries/famdb/rmlib.config && cd /opt/RepeatMasker && ./tetoolsDfamUpdate.pl"
-```
-
-This command: - Binds our local `Libraries` directory to `/opt/RepeatMasker/Libraries` in the container - Removes any existing configuration file - Runs the update script to generate a new configuration based on our custom libraries
 
 ### Execute RepeatMasker
 
@@ -331,7 +342,12 @@ The `.tbl` file provides a comprehensive summary of repeat content:
 cat 07-repeats-analysis/rm_out/${SN}.fasta.tbl
 ```
 
-This table shows: - Total repeat content percentage - Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.) - Interspersed repeats vs. small RNA - Low complexity and simple repeat content
+This table shows:
+
+-   Total repeat content percentage
+-   Breakdown by major repeat classes (LTR, LINE, SINE, DNA transposons, etc.)
+-   Interspersed repeats vs. small RNA
+-   Low complexity and simple repeat content
 
 ## Understanding RepeatMasker Output Metrics
 
@@ -345,15 +361,27 @@ The Kimura substitution level (also called Kimura distance or K2P distance) is a
 -   **Medium values (5-20%)**: Moderately aged repeats with accumulated mutations
 -   **High values (\>20%)**: Ancient repeats that have significantly diverged from their original sequence
 
-The Kimura distance accounts for: - Transition mutations (A↔G, C↔T) occurring more frequently than transversions - Multiple substitutions at the same position (back-mutations) - Saturation effects in highly diverged sequences
+The Kimura distance accounts for:
+
+-   Transition mutations (A↔G, C↔T) occurring more frequently than transversions
+-   Multiple substitutions at the same position (back-mutations)
+-   Saturation effects in highly diverged sequences
 
 ### Why Genome Percentages Can Exceed 100%
 
 In RepeatMasker output tables, you may notice that the total percentage of repeats can sometimes exceed 100% of the genome size. This occurs due to several factors:
 
-**1. Overlapping Annotations:** - Different repeat families may overlap in the same genomic region - Nested transposable elements (one inserted within another) - RepeatMasker reports each identified repeat separately, even if they overlap
+**1. Overlapping Annotations:**
 
-**2. Fragmented Repeat Detection:** - Large repeats broken by mutations may be detected as multiple smaller fragments - Each fragment contributes to the total count - The sum of fragments may exceed the actual genomic space occupied
+-   Different repeat families may overlap in the same genomic region
+-   Nested transposable elements (one inserted within another)
+-   RepeatMasker reports each identified repeat separately, even if they overlap
+
+**2. Fragmented Repeat Detection:**
+
+-   Large repeats broken by mutations may be detected as multiple smaller fragments
+-   Each fragment contributes to the total count
+-   The sum of fragments may exceed the actual genomic space occupied
 
 **3. Reference vs. Assembly Differences:** - Percentages are calculated relative to the **assembly size**, not the "true" genome size - If the assembly is incomplete or fragmented, percentages may be inflated - Conversely, if repeats are under-assembled (collapsed), percentages may be deflated
 
@@ -365,7 +393,11 @@ Percentage = (Total bp of identified repeats / Assembly size) × 100
 
 The "Total bp of identified repeats" includes all overlapping regions, which can exceed the actual physical space occupied.
 
-**Interpreting the Results:** - Focus on **relative proportions** between repeat classes rather than absolute percentages - Use the **masked assembly** to see the actual genomic regions covered by repeats - Consider the **non-redundant repeat content** for more accurate genome composition estimates
+**Interpreting the Results:**
+
+-   Focus on **relative proportions** between repeat classes rather than absolute percentages
+-   Use the **masked assembly** to see the actual genomic regions covered by repeats
+-   Consider the **non-redundant repeat content** for more accurate genome composition estimates
 
 ## RepeatMasker Approaches: `-species` vs. `famdb.py/-lib`
 
@@ -373,23 +405,43 @@ RepeatMasker offers different strategies for accessing repeat libraries, each wi
 
 ### `-species` Approach (Narrow Coverage)
 
-The `-species fungi` option uses RepeatMasker's built-in species-specific filtering: - **Curated selection**: RepeatMasker selects only well-characterized repeats specific to the taxonomic group - **Conservative approach**: Focuses on high-confidence, validated repeat families - **Limited coverage**: May miss divergent or poorly characterized repeats - **Expected result**: \~1% repeat content for Fusarium (minimal coverage)
+The `-species fungi` option uses RepeatMasker's built-in species-specific filtering:
+
+-   **Curated selection**: RepeatMasker selects only well-characterized repeats specific to the taxonomic group
+-   **Conservative approach**: Focuses on high-confidence, validated repeat families
+-   **Limited coverage**: May miss divergent or poorly characterized repeats
+-   **Expected result**: \~1% repeat content for Fusarium (minimal coverage)
 
 ### `famdb.py` with `--ancestors --descendants` (Broad Coverage)
 
-Using `famdb.py` to extract repeats allows more comprehensive library construction: - **Taxonomic breadth**: Includes repeats from ancestral and descendant taxonomic groups - **Comprehensive coverage**: Captures more divergent repeat families that may be present - **Custom control**: Allows fine-tuning of taxonomic scope - **Expected result**: Higher repeat detection rate (not tested in this tutorial, but likely \>5%)
+Using `famdb.py` to extract repeats allows more comprehensive library construction:
+
+-   **Taxonomic breadth**: Includes repeats from ancestral and descendant taxonomic groups
+-   **Comprehensive coverage**: Captures more divergent repeat families that may be present
+-   **Expected result**: Higher repeat detection rate (not tested in this tutorial, but likely \>5%)
 
 ### Combined Approach: Dfam + RepeatModeler
 
-The most comprehensive strategy combines curated and *de novo* identified repeats: - **Dfam coverage**: Curated, well-characterized repeat families via `famdb.py` - **Species-specific coverage**: Novel repeats identified by RepeatModeler - **Maximum sensitivity**: Captures both known and novel repetitive elements - **Expected result**: \~11% repeat content (most comprehensive masking)
+The most comprehensive strategy combines curated and *de novo* identified repeats:
+
+-   **Dfam coverage**: Curated, well-characterized repeat families via `famdb.py`
+-   **Species-specific coverage**: Novel repeats identified by RepeatModeler
+-   **Maximum sensitivity**: Captures both known and novel repetitive elements
+-   **Expected result**: \~11% repeat content (most comprehensive masking)
 
 ## Expected Repeat Content Results
 
 Based on different RepeatMasker approaches, expected repeat content for this Fusarium assembly:
 
-**Tested approaches:** - **Using Dfam database alone** (narrow with `-species fungi` option): \~1% repeat content (limited coverage) - **Using *de novo* identified repeats only** (RepeatModeler families): \~6% repeat content - **Using combined approach** (Dfam via `famdb.py` with ancestors/descendants + RepeatModeler): \~11% repeat content (comprehensive masking)
+**Tested approaches:**
 
-**Not tested but expected:** - **Using Dfam only** (broad via `famdb.py` with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)
+-   **Using Dfam database alone** (narrow with `-species fungi` option): \~1% repeat content (limited coverage)
+-   **Using *de novo* identified repeats only** (RepeatModeler families): \~6% repeat content
+-   **Using combined approach** (Dfam via `famdb.py` with ancestors/descendants + RepeatModeler): \~11% repeat content (comprehensive masking)
+
+**Not tested but expected:**
+
+-   **Using Dfam only** (broad via `famdb.py` with ancestors/descendants): Likely 3-5% repeat content (moderate coverage)
 
 The progression from 1% → 6% → 11% demonstrates the importance of combining curated databases with *de novo* repeat identification for comprehensive genome masking before gene annotation.
 
