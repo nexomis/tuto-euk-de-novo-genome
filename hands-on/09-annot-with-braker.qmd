@@ -1,5 +1,5 @@
 ---
-title: "Genome Annotation with BRAKER"
+title: "Genome Annotation with BRAKER and GALBA"
 author: Julien Fouret
 format: 
   html:
@@ -9,7 +9,7 @@ execute:
   echo: true
 ---
 
-# Genome Annotation with BRAKER
+# Genome Annotation with BRAKER and GALBA
 
 In this chapter, we will perform genome annotation using BRAKER, a powerful pipeline for fully automated gene prediction in eukaryotic genomes. We will use the assembly of *Fusarium oxysporum* f. sp. *lycopersici* strain Fo47 that we have been working with.
 
@@ -31,30 +31,47 @@ export rna_bam="$PWD/08-data/star/${SN}Aligned.sortedByCoord.out.bam"
 
 ### Software Dependencies
 
-We will use the official BRAKER3 container.
+We will use official containers for our annotation software.
 
-#### Apptainer
+#### BRAKER3
 
 ``` bash
-alias braker.pl="apptainer run --writable-tmpfs docker://teambraker/braker3:latest braker.pl"
+alias braker.pl="apptainer run --writable-tmpfs docker://teambraker/braker3:v1.0.11.2 braker.pl"
 ```
 
-## Annotation Strategy 1: Proteins Only
+#### GALBA
 
-In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.
+For GALBA, we need a writable directory for the AUGUSTUS configuration.
 
-> **A note on using existing species parameters:** AUGUSTUS comes with pre-trained parameters for many species, including *Fusarium*. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform *de novo* training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The `--species` parameter in our `braker.pl` command gives a unique name to the new model that BRAKER will create.
+1.  **Create a local directory for the AUGUSTUS configuration:**
 
 ``` bash
-mkdir -p 09-annot/prot_only
-sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
-braker.pl \
+mkdir -p 09-annot/augustus_config_galba
+```
+
+2.  **Set up an alias for GALBA:**
+
+The alias binds our local configuration directory to the expected path inside the container.
+
+``` bash
+alias galba.pl="apptainer run --writable-tmpfs --bind $PWD/09-annot/augustus_config_galba:/usr/share/augustus/config docker://katharinahoff/galba-notebook:latest galba.pl"
+```
+
+## Annotation Strategy 1: Proteins Only with GALBA
+
+GALBA is another pipeline for gene prediction. According to its documentation, "if you have no RNA-Seq data and the genome is large, use GALBA! Otherwise use BRAKER, first." It is particularly effective when high-quality protein evidence from a closely related species is available. Unlike BRAKER, which can use a broad protein database, GALBA is designed to work with a more focused set of proteins.
+
+We will run GALBA using the same protein evidence as before to compare the results.
+
+``` bash
+
+mkdir -p 09-annot/galba_prot_only
+galba.pl \
     --genome=09-annot/renamed_assembly.fa \
     --prot_seq=$proteins \
-    --species=${SN}_prot \
-    --workingdir=09-annot/prot_only \
-    --threads=$NCPUS \
-    --fungus
+    --species=${SN}_galba \
+    --workingdir=09-annot/galba_prot_only \
+    --threads=$NCPUS
 ```
 
 **BRAKER parameters explained:**
@@ -88,6 +105,24 @@ braker.pl \
 **Additional BRAKER parameter:**
 
 -   `--bam`: Path to the sorted BAM file containing aligned RNA-Seq reads.
+
+## Annotation Strategy 3: Proteins Only with Braker3 (not recommended)
+
+In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.
+
+> **A note on using existing species parameters:** AUGUSTUS comes with pre-trained parameters for many species, including *Fusarium*. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform *de novo* training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The `--species` parameter in our `braker.pl` command gives a unique name to the new model that BRAKER will create.
+
+``` bash
+mkdir -p 09-annot/prot_only
+sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
+braker.pl \
+    --genome=09-annot/renamed_assembly.fa \
+    --prot_seq=$proteins \
+    --species=${SN}_prot \
+    --workingdir=09-annot/prot_only \
+    --threads=$NCPUS \
+    --fungus
+```
 
 ## Expected Outputs
 
