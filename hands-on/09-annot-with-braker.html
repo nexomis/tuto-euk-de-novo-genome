@@ -8,7 +8,7 @@
 
 <meta name="author" content="Julien Fouret">
 
-<title>Genome Annotation with BRAKER – De Novo Genome Assembly Tutorial</title>
+<title>Genome Annotation with BRAKER and GALBA – De Novo Genome Assembly Tutorial</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -216,16 +216,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#genome-annotation-with-braker" id="toc-genome-annotation-with-braker" class="nav-link active" data-scroll-target="#genome-annotation-with-braker"><span class="header-section-number">9</span> Genome Annotation with BRAKER</a>
+  <li><a href="#genome-annotation-with-braker-and-galba" id="toc-genome-annotation-with-braker-and-galba" class="nav-link active" data-scroll-target="#genome-annotation-with-braker-and-galba"><span class="header-section-number">9</span> Genome Annotation with BRAKER and GALBA</a>
   <ul class="collapse">
   <li><a href="#configuration-and-setup" id="toc-configuration-and-setup" class="nav-link" data-scroll-target="#configuration-and-setup"><span class="header-section-number">9.1</span> Configuration and Setup</a>
   <ul class="collapse">
   <li><a href="#environment-variables" id="toc-environment-variables" class="nav-link" data-scroll-target="#environment-variables"><span class="header-section-number">9.1.1</span> Environment Variables</a></li>
   <li><a href="#software-dependencies" id="toc-software-dependencies" class="nav-link" data-scroll-target="#software-dependencies"><span class="header-section-number">9.1.2</span> Software Dependencies</a></li>
   </ul></li>
-  <li><a href="#annotation-strategy-1-proteins-only" id="toc-annotation-strategy-1-proteins-only" class="nav-link" data-scroll-target="#annotation-strategy-1-proteins-only"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only</a></li>
+  <li><a href="#annotation-strategy-1-proteins-only-with-galba" id="toc-annotation-strategy-1-proteins-only-with-galba" class="nav-link" data-scroll-target="#annotation-strategy-1-proteins-only-with-galba"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only with GALBA</a></li>
   <li><a href="#annotation-strategy-2-proteins-rna-seq" id="toc-annotation-strategy-2-proteins-rna-seq" class="nav-link" data-scroll-target="#annotation-strategy-2-proteins-rna-seq"><span class="header-section-number">9.3</span> Annotation Strategy 2: Proteins + RNA-Seq</a></li>
-  <li><a href="#expected-outputs" id="toc-expected-outputs" class="nav-link" data-scroll-target="#expected-outputs"><span class="header-section-number">9.4</span> Expected Outputs</a></li>
+  <li><a href="#annotation-strategy-3-proteins-only-with-braker3-not-recommended" id="toc-annotation-strategy-3-proteins-only-with-braker3-not-recommended" class="nav-link" data-scroll-target="#annotation-strategy-3-proteins-only-with-braker3-not-recommended"><span class="header-section-number">9.4</span> Annotation Strategy 3: Proteins Only with Braker3 (not recommended)</a></li>
+  <li><a href="#expected-outputs" id="toc-expected-outputs" class="nav-link" data-scroll-target="#expected-outputs"><span class="header-section-number">9.5</span> Expected Outputs</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -239,7 +240,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Genome Annotation with BRAKER</h1>
+<h1 class="title">Genome Annotation with BRAKER and GALBA</h1>
 </div>
 
 
@@ -262,8 +263,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="genome-annotation-with-braker" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> Genome Annotation with BRAKER</h1>
+<section id="genome-annotation-with-braker-and-galba" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Genome Annotation with BRAKER and GALBA</h1>
 <p>In this chapter, we will perform genome annotation using BRAKER, a powerful pipeline for fully automated gene prediction in eukaryotic genomes. We will use the assembly of <em>Fusarium oxysporum</em> f.&nbsp;sp. <em>lycopersici</em> strain Fo47 that we have been working with.</p>
 <p>BRAKER combines GeneMark-ETP and AUGUSTUS, two highly accurate gene prediction tools, and can leverage evidence from RNA-Seq data and protein homology to improve annotation quality.</p>
 <section id="configuration-and-setup" class="level2" data-number="9.1">
@@ -279,28 +280,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="software-dependencies" class="level3" data-number="9.1.2">
 <h3 data-number="9.1.2" class="anchored" data-anchor-id="software-dependencies"><span class="header-section-number">9.1.2</span> Software Dependencies</h3>
-<p>We will use the official BRAKER3 container.</p>
-<section id="apptainer" class="level4" data-number="9.1.2.1">
-<h4 data-number="9.1.2.1" class="anchored" data-anchor-id="apptainer"><span class="header-section-number">9.1.2.1</span> Apptainer</h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> braker.pl=<span class="st">"apptainer run --writable-tmpfs docker://teambraker/braker3:latest braker.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We will use official containers for our annotation software.</p>
+<section id="braker3" class="level4" data-number="9.1.2.1">
+<h4 data-number="9.1.2.1" class="anchored" data-anchor-id="braker3"><span class="header-section-number">9.1.2.1</span> BRAKER3</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> braker.pl=<span class="st">"apptainer run --writable-tmpfs docker://teambraker/braker3:v1.0.11.2 braker.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="galba" class="level4" data-number="9.1.2.2">
+<h4 data-number="9.1.2.2" class="anchored" data-anchor-id="galba"><span class="header-section-number">9.1.2.2</span> GALBA</h4>
+<p>For GALBA, we need a writable directory for the AUGUSTUS configuration.</p>
+<ol type="1">
+<li><strong>Create a local directory for the AUGUSTUS configuration:</strong></li>
+</ol>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/augustus_config_galba</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="2" type="1">
+<li><strong>Set up an alias for GALBA:</strong></li>
+</ol>
+<p>The alias binds our local configuration directory to the expected path inside the container.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> galba.pl=<span class="st">"apptainer run --writable-tmpfs --bind </span><span class="va">$PWD</span><span class="st">/09-annot/augustus_config_galba:/usr/share/augustus/config docker://katharinahoff/galba-notebook:latest galba.pl"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 </section>
-<section id="annotation-strategy-1-proteins-only" class="level2" data-number="9.2">
-<h2 data-number="9.2" class="anchored" data-anchor-id="annotation-strategy-1-proteins-only"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only</h2>
-<p>In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.</p>
-<blockquote class="blockquote">
-<p><strong>A note on using existing species parameters:</strong> AUGUSTUS comes with pre-trained parameters for many species, including <em>Fusarium</em>. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform <em>de novo</em> training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The <code>--species</code> parameter in our <code>braker.pl</code> command gives a unique name to the new model that BRAKER will create.</p>
-</blockquote>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_only</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_only <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="annotation-strategy-1-proteins-only-with-galba" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="annotation-strategy-1-proteins-only-with-galba"><span class="header-section-number">9.2</span> Annotation Strategy 1: Proteins Only with GALBA</h2>
+<p>GALBA is another pipeline for gene prediction. According to its documentation, “if you have no RNA-Seq data and the genome is large, use GALBA! Otherwise use BRAKER, first.” It is particularly effective when high-quality protein evidence from a closely related species is available. Unlike BRAKER, which can use a broad protein database, GALBA is designed to work with a more focused set of proteins.</p>
+<p>We will run GALBA using the same protein evidence as before to compare the results.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/galba_prot_only</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">galba.pl</span> <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_galba <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/galba_prot_only <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>BRAKER parameters explained:</strong></p>
 <ul>
 <li><code>--genome</code>: Path to the repeat-masked genome assembly.</li>
@@ -314,25 +325,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="annotation-strategy-2-proteins-rna-seq" class="level2" data-number="9.3">
 <h2 data-number="9.3" class="anchored" data-anchor-id="annotation-strategy-2-proteins-rna-seq"><span class="header-section-number">9.3</span> Annotation Strategy 2: Proteins + RNA-Seq</h2>
 <p>Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the recommended approach as it combines homology-based evidence with transcriptomic evidence, leading to more accurate gene predictions.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_rna</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure to enforce simple name without space (better if integrated at the mapping step) </span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bam</span><span class="op">=</span><span class="va">$rna_bam</span> <span class="dt">\</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot_rna <span class="dt">\</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_rna <span class="dt">\</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_rna</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure to enforce simple name without space (better if integrated at the mapping step) </span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--bam</span><span class="op">=</span><span class="va">$rna_bam</span> <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot_rna <span class="dt">\</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_rna <span class="dt">\</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>Additional BRAKER parameter:</strong></p>
 <ul>
 <li><code>--bam</code>: Path to the sorted BAM file containing aligned RNA-Seq reads.</li>
 </ul>
 </section>
-<section id="expected-outputs" class="level2" data-number="9.4">
-<h2 data-number="9.4" class="anchored" data-anchor-id="expected-outputs"><span class="header-section-number">9.4</span> Expected Outputs</h2>
+<section id="annotation-strategy-3-proteins-only-with-braker3-not-recommended" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="annotation-strategy-3-proteins-only-with-braker3-not-recommended"><span class="header-section-number">9.4</span> Annotation Strategy 3: Proteins Only with Braker3 (not recommended)</h2>
+<p>In this strategy, we will run BRAKER using only protein evidence from our curated Fungi OrthoDB database. This approach is useful when RNA-Seq data is not available or of poor quality.</p>
+<blockquote class="blockquote">
+<p><strong>A note on using existing species parameters:</strong> AUGUSTUS comes with pre-trained parameters for many species, including <em>Fusarium</em>. While it is possible to use these as a starting point for training, the standard BRAKER workflow is to perform <em>de novo</em> training to create a new, highly optimized species model based on the provided evidence. In this tutorial, we will follow the standard workflow. The <code>--species</code> parameter in our <code>braker.pl</code> command gives a unique name to the new model that BRAKER will create.</p>
+</blockquote>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 09-annot/prot_only</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;(\S+).*$/&gt;\1/'</span> <span class="va">$assembly</span> <span class="op">&gt;</span> 09-annot/renamed_assembly.fa</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">braker.pl</span> <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--genome</span><span class="op">=</span>09-annot/renamed_assembly.fa <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">--prot_seq</span><span class="op">=</span><span class="va">$proteins</span> <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span><span class="op">=</span><span class="va">${SN}</span>_prot <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--workingdir</span><span class="op">=</span>09-annot/prot_only <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--threads</span><span class="op">=</span><span class="va">$NCPUS</span> <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--fungus</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="expected-outputs" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="expected-outputs"><span class="header-section-number">9.5</span> Expected Outputs</h2>
 <p>After running BRAKER, each working directory (<code>09-annot/prot_only</code> and <code>09-annot/prot_rna</code>) will contain several output files. The most important ones are:</p>
 <ul>
 <li><code>braker.gtf</code>: The final gene predictions in GTF format.</li>
