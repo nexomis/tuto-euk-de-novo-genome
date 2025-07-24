@@ -229,6 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#download-reference-genome" id="toc-download-reference-genome" class="nav-link" data-scroll-target="#download-reference-genome"><span class="header-section-number">5.3.1</span> Download Reference Genome</a></li>
   <li><a href="#run-quast" id="toc-run-quast" class="nav-link" data-scroll-target="#run-quast"><span class="header-section-number">5.3.2</span> Run QUAST</a></li>
+  <li><a href="#understanding-quast-metrics" id="toc-understanding-quast-metrics" class="nav-link" data-scroll-target="#understanding-quast-metrics"><span class="header-section-number">5.3.3</span> Understanding QUAST Metrics</a></li>
   </ul></li>
   <li><a href="#busco-evaluation" id="toc-busco-evaluation" class="nav-link" data-scroll-target="#busco-evaluation"><span class="header-section-number">5.4</span> BUSCO Evaluation</a>
   <ul class="collapse">
@@ -336,6 +337,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>--labels</code>: Human-readable names for the assemblies in the report.</li>
 <li>Positional arguments: Paths to the assembly files to be evaluated.</li>
 </ul>
+</section>
+<section id="understanding-quast-metrics" class="level3" data-number="5.3.3">
+<h3 data-number="5.3.3" class="anchored" data-anchor-id="understanding-quast-metrics"><span class="header-section-number">5.3.3</span> Understanding QUAST Metrics</h3>
+<blockquote class="blockquote">
+<p><strong>Note on statistics:</strong> QUAST metrics can be broadly categorized into reference-based and read-based. It is crucial to consider the evolutionary distance between your sample and the reference genome. If the reference is not closely related, what QUAST reports as a “misassembly” could in fact be a genuine structural variation between the two genomes. In such cases, you should rely more on <strong>read-based</strong> statistics and reference-free metrics (like BUSCO scores) to assess the quality of your assembly.</p>
+</blockquote>
+<p>Here is a partial categorization of some key QUAST metrics:</p>
+<ul>
+<li><strong>Reference-based metrics:</strong> These metrics are calculated by comparing the assembly to a reference genome. They assess contiguity and correctness relative to the reference.
+<ul>
+<li><code># misassemblies</code> (and its variants like <code># local misassemblies</code>, <code># scaffold gap misassemblies</code>)</li>
+<li><code># misassembled contigs</code></li>
+<li><code># unaligned contigs</code></li>
+<li>Genome fraction (%)</li>
+<li>Duplication ratio</li>
+<li>NGA50 / NGA75</li>
+</ul></li>
+<li><strong>Read-based metrics:</strong> These metrics are calculated by mapping the sequencing reads back to the assembly. They can help validate the assembly structure independently of a reference.
+<ul>
+<li><code># structural variations</code> (when reads are provided)</li>
+<li>Coverage analysis</li>
+<li>Read mapping statistics</li>
+</ul></li>
+</ul>
+<p>For a complete and detailed description of all metrics, please refer to the <a href="https://quast.sourceforge.net/docs/manual.html#sec3.1">official QUAST manual</a>.</p>
 </section>
 </section>
 <section id="busco-evaluation" class="level2" data-number="5.4">
