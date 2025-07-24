@@ -93,6 +93,26 @@ quast.py \
 -   `--labels`: Human-readable names for the assemblies in the report.
 -   Positional arguments: Paths to the assembly files to be evaluated.
 
+### Understanding QUAST Metrics
+
+> **Note on statistics:** QUAST metrics can be broadly categorized into reference-based and read-based. It is crucial to consider the evolutionary distance between your sample and the reference genome. If the reference is not closely related, what QUAST reports as a "misassembly" could in fact be a genuine structural variation between the two genomes. In such cases, you should rely more on **read-based** statistics and reference-free metrics (like BUSCO scores) to assess the quality of your assembly.
+
+Here is a partial categorization of some key QUAST metrics:
+
+-   **Reference-based metrics:** These metrics are calculated by comparing the assembly to a reference genome. They assess contiguity and correctness relative to the reference.
+    -   `# misassemblies` (and its variants like `# local misassemblies`, `# scaffold gap misassemblies`)
+    -   `# misassembled contigs`
+    -   `# unaligned contigs`
+    -   Genome fraction (%)
+    -   Duplication ratio
+    -   NGA50 / NGA75
+-   **Read-based metrics:** These metrics are calculated by mapping the sequencing reads back to the assembly. They can help validate the assembly structure independently of a reference.
+    -   `# structural variations` (when reads are provided)
+    -   Coverage analysis
+    -   Read mapping statistics
+
+For a complete and detailed description of all metrics, please refer to the [official QUAST manual](https://quast.sourceforge.net/docs/manual.html#sec3.1).
+
 ## BUSCO Evaluation
 
 ### Download BUSCO database
