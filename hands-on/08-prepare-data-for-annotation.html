@@ -220,7 +220,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable" id="toc-variable" class="nav-link" data-scroll-target="#variable"><span class="header-section-number">2</span> Variable</a></li>
   <li><a href="#create-fungi-protein-database-from-orthodb" id="toc-create-fungi-protein-database-from-orthodb" class="nav-link" data-scroll-target="#create-fungi-protein-database-from-orthodb"><span class="header-section-number">3</span> Create Fungi Protein Database from OrthoDB</a></li>
   <li><a href="#fetch-and-clean-rna-seq-reads" id="toc-fetch-and-clean-rna-seq-reads" class="nav-link" data-scroll-target="#fetch-and-clean-rna-seq-reads"><span class="header-section-number">4</span> Fetch and Clean RNA-Seq Reads</a></li>
-  <li><a href="#align-rna-seq-reads-with-star" id="toc-align-rna-seq-reads-with-star" class="nav-link" data-scroll-target="#align-rna-seq-reads-with-star"><span class="header-section-number">5</span> Align RNA-Seq Reads with STAR</a></li>
+  <li><a href="#assembly-preprocessing" id="toc-assembly-preprocessing" class="nav-link" data-scroll-target="#assembly-preprocessing"><span class="header-section-number">5</span> Assembly Preprocessing</a></li>
+  <li><a href="#align-rna-seq-reads-with-hisat2" id="toc-align-rna-seq-reads-with-hisat2" class="nav-link" data-scroll-target="#align-rna-seq-reads-with-hisat2"><span class="header-section-number">6</span> Align RNA-Seq Reads with HISAT2</a></li>
   </ul>
 </nav>
 </nav>
@@ -260,18 +261,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="setup" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="setup"><span class="header-section-number">1</span> Setup</h2>
 <p>We will use <code>apptainer</code> to manage our software dependencies. Here are the aliases we will use:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> prefetch=<span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fasterq-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fastp=<span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> STAR=<span class="st">"apptainer exec docker://quay.io/biocontainers/star:2.7.11b--h5ca1c30_6 STAR"</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> samtools=<span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">prefetch</span><span class="op">=</span><span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">fasterq</span>-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">fastp</span><span class="op">=</span><span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">samtools</span><span class="op">=</span><span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">hisat2</span><span class="op">=</span><span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> prefetch=<span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fasterq-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fastp=<span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> hisat2=<span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> hisat2-build=<span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2-build"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> samtools=<span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="variable" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="variable"><span class="header-section-number">2</span> Variable</h2>
-<pre><code>export SRR_RNA="SRR10123445"
-export SN=Fo47
-export NCPUS=12
-export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SN</span><span class="op">=</span>Fo47</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS</span><span class="op">=</span>32</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NJOB</span><span class="op">=</span>8</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">NCPUS_PER_JOB</span><span class="op">=</span>4</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">assembly</span><span class="op">=</span><span class="st">"</span><span class="va">$PWD</span><span class="st">/07-repeats-analysis/rm_out/Fo47.fasta.masked"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="create-fungi-protein-database-from-orthodb" class="level2" data-number="3">
 <h2 data-number="3" class="anchored" data-anchor-id="create-fungi-protein-database-from-orthodb"><span class="header-section-number">3</span> Create Fungi Protein Database from OrthoDB</h2>
@@ -296,33 +305,99 @@ export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"</code></pre>
 <section id="fetch-and-clean-rna-seq-reads" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="fetch-and-clean-rna-seq-reads"><span class="header-section-number">4</span> Fetch and Clean RNA-Seq Reads</h2>
 <p>We will download RNA-Seq data from the SRA and clean it to remove low-quality reads and adapters.</p>
+<p>First, let’s download the list of RNA-Seq runs.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/reads</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">prefetch</span> <span class="va">$SRR_RNA</span> <span class="at">-O</span> 08-data/reads</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">fasterq-dump</span> <span class="va">$SRR_RNA</span> <span class="at">-O</span> 08-data/reads</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">fastp</span> <span class="at">-i</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.fastq <span class="at">-I</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_2.fastq <span class="dt">\</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">-o</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.clean.fastq.gz <span class="at">-O</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_2.clean.fastq.gz <span class="dt">\</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">--html</span> 08-data/reads/<span class="va">${SRR_RNA}</span>.fastp.html</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="align-rna-seq-reads-with-star" class="level2" data-number="5">
-<h2 data-number="5" class="anchored" data-anchor-id="align-rna-seq-reads-with-star"><span class="header-section-number">5</span> Align RNA-Seq Reads with STAR</h2>
-<p>Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/star/INDEX</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runThreadN</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--runMode</span> genomeGenerate <span class="dt">\</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeDir</span> 08-data/star/INDEX <span class="dt">\</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--genomeFastaFiles</span> <span class="va">$assembly</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">STAR</span> <span class="at">--runThreadN</span> <span class="va">$NCPUS</span> <span class="dt">\</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">--genomeDir</span> 08-data/star/INDEX <span class="dt">\</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">--readFilesIn</span> 08-data/reads/<span class="va">${SRR_RNA}</span>_1.clean.fastq.gz 08-data/reads/<span class="va">${SRR_RNA}</span>_2.clean.fastq.gz <span class="dt">\</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">--readFilesCommand</span> zcat <span class="dt">\</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">--outFileNamePrefix</span> 08-data/star/<span class="va">$SN</span> <span class="dt">\</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">--outSAMtype</span> BAM SortedByCoordinate</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="st">"https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_rnaseq_runs.txt"</span> <span class="op">&gt;</span> 08-data/reads/rnaseq_runs.txt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now, we’ll use a Python script to sample one SRA ID per unique BioProject, shuffle them, and save the list. We are using pandas, so make sure it is installed in your environment.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set seed for reproducibility</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>random.seed(<span class="dv">42</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Define file paths</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>input_file <span class="op">=</span> <span class="st">"08-data/reads/rnaseq_runs.txt"</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>output_file <span class="op">=</span> <span class="st">"08-data/reads/sra_list.txt"</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the tab-delimited file.</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># The file from NCBI has columns 'Run' (SRA ID) and 'BioProject'.</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(input_file, sep<span class="op">=</span><span class="st">'</span><span class="ch">\t</span><span class="st">'</span>)</span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> flagstats 08-data/star/<span class="va">${SN}</span>.sorted.bam</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample one SRA ID ('Run') per unique BioProject ID</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>sra_samples <span class="op">=</span> df.groupby(<span class="st">'Bioproject Accession'</span>)[<span class="st">'SRA run accession'</span>].first().tolist()</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Shuffle the list of SRA IDs</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>random.shuffle(sra_samples)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Write the shuffled list to the output file</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(output_file, <span class="st">'w'</span>) <span class="im">as</span> f:</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sra_id <span class="kw">in</span> sra_samples:</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="ss">f"</span><span class="sc">{</span>sra_id<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sampled and shuffled </span><span class="sc">{</span><span class="bu">len</span>(sra_samples)<span class="sc">}</span><span class="ss"> SRA IDs and saved to </span><span class="sc">{</span>output_file<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we can process the samples from our list.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="va">$prefetch</span> {} <span class="at">-O</span> 08-data/reads</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="va">$fasterq_dump</span> {} <span class="at">-O</span> 08-data/reads</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="va">$fastp</span> <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-i</span> 08-data/reads/{}_1.fastq <span class="at">-I</span> 08-data/reads/{}_2.fastq <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> 08-data/reads/{}_1.clean.fastq.gz <span class="at">-O</span> 08-data/reads/{}_2.clean.fastq.gz <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--detect_adapter_for_pe</span> <span class="at">--trim_poly_x</span> <span class="at">--thread</span> <span class="va">$NCPUS_PER_JOB</span> <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--html</span> 08-data/reads/{}.fastp.html <span class="at">-j</span> 08-data/reads/{}.fastp.json</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="assembly-preprocessing" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="assembly-preprocessing"><span class="header-section-number">5</span> Assembly Preprocessing</h2>
+<p>Before aligning the RNA-Seq reads, we need to prepare our reference assembly. This involves copying the masked assembly from the previous chapter and simplifying its sequence headers. Many bioinformatics tools struggle with long or complex FASTA headers, so it’s a good practice to create clean, simple identifiers.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/hisat2/</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="va">$assembly</span> 08-data/assembly.fa</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># To simplify downstream analysis, we will rename the fasta headers </span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># from "&gt;CP021931.1 Fusarium oxysporum f. sp. lycopersici str. 4287 chromosome I, whole genome shotgun sequence" </span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># to a simpler format like "&gt;chr_I".</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># This is a crucial step as many bioinformatics tools have issues with complex or long sequence headers.</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="at">-E</span> <span class="st">'s/&gt;.*chromosome ([IVX]+),.*/&gt;chr_\1/'</span> 08-data/assembly.fa</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="align-rna-seq-reads-with-hisat2" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="align-rna-seq-reads-with-hisat2"><span class="header-section-number">6</span> Align RNA-Seq Reads with HISAT2</h2>
+<p>Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis. For alignment, each sample (SRR) will be associated with a read group, and all alignments will be merged into a single BAM file.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">hisat2-build</span> 08-data/assembly.fa 08-data/hisat2/<span class="va">${SN}</span>_index</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Align reads, add read groups, and create sorted BAM files</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="st">"</span><span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">    </span><span class="va">$hisat2</span><span class="st"> -p </span><span class="va">$NCPUS_PER_JOB</span><span class="st"> </span><span class="dt">\</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="st">        -x 08-data/hisat2/index/hisat </span><span class="dt">\</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">        -1 08-data/reads/{}_1.clean.fastq.gz </span><span class="dt">\</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">        -2 08-data/reads/{}_2.clean.fastq.gz </span><span class="dt">\</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="st">        --rg-id {} --rg </span><span class="dt">\"</span><span class="st">SM:{}</span><span class="dt">\"</span><span class="st"> </span><span class="dt">\</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="st">        -S 08-data/hisat2/{}.sam </span><span class="dt">\</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="st">        1&gt; 08-data/hisat2/{}.hisat.out 2&gt; 08-data/hisat2/{}.hisat.err"</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="st">"</span><span class="dt">\</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="st">  </span><span class="va">$samtools</span><span class="st"> view -bS 08-data/hisat2/{}.sam -o 08-data/hisat2/{}.unsorted.bam"</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="st">"</span><span class="dt">\</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="st">  </span><span class="va">$samtools</span><span class="st"> sort -@ </span><span class="va">$NCPUS_PER_JOB</span><span class="st"> -o 08-data/hisat2/{}.sorted.bam 08-data/hisat2/{}.unsorted.bam"</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/sra_list.txt <span class="kw">|</span> <span class="ex">parallel</span> <span class="at">-j</span> <span class="va">$NJOB</span> <span class="st">"</span><span class="dt">\</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="st">  </span><span class="va">$samtools</span><span class="st"> flagstat 08-data/hisat2/{}.sorted.bam &gt; 08-data/hisat2/{}.flagstat"</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a list of the generated BAM files</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> 08-data/hisat2 <span class="at">-name</span> <span class="st">"*.sorted.bam"</span> <span class="op">&gt;</span> 08-data/hisat2/bam.list</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge the BAM files into a single file</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> merge <span class="at">-@</span> <span class="va">$NCPUS</span> <span class="at">-b</span> 08-data/hisat2/bam.list <span class="at">-o</span> 08-data/hisat2/merged_alignments.bam</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Index the merged BAM file</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> index 08-data/hisat2/merged_alignments.bam</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: remove intermediate BAM files and the list</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co"># cat 08-data/hisat2/bam.list | xargs rm</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># rm 08-data/hisat2/bam.list</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>
