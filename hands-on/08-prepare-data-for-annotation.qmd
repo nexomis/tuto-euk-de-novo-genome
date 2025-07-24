@@ -16,19 +16,27 @@ In this section, we will prepare the necessary data for the genome annotation of
 We will use `apptainer` to manage our software dependencies. Here are the aliases we will use:
 
 ``` bash
+export prefetch="apptainer run docker://ncbi/sra-tools prefetch"
+export fasterq-dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
+export fastp="apptainer exec docker://staphb/fastp fastp"
+export samtools="apptainer exec docker://staphb/samtools samtools"
+export hisat2="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"
+
 alias prefetch="apptainer run docker://ncbi/sra-tools prefetch"
 alias fasterq-dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
 alias fastp="apptainer exec docker://staphb/fastp fastp"
-alias STAR="apptainer exec docker://quay.io/biocontainers/star:2.7.11b--h5ca1c30_6 STAR"
+alias hisat2="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"
+alias hisat2-build="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2-build"
 alias samtools="apptainer exec docker://staphb/samtools samtools"
 ```
 
 ## Variable
 
-```         
-export SRR_RNA="SRR10123445"
+``` bash
 export SN=Fo47
-export NCPUS=12
+export NCPUS=32
+export NJOB=8
+export NCPUS_PER_JOB=4
 export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"
 ```
 
@@ -64,35 +72,113 @@ Now, we can run the script to select the Fungi sequences.
 
 We will download RNA-Seq data from the SRA and clean it to remove low-quality reads and adapters.
 
+First, let's download the list of RNA-Seq runs.
+
 ``` bash
 mkdir -p 08-data/reads
 
-prefetch $SRR_RNA -O 08-data/reads
-fasterq-dump $SRR_RNA -O 08-data/reads
-
-fastp -i 08-data/reads/${SRR_RNA}_1.fastq -I 08-data/reads/${SRR_RNA}_2.fastq \
-      -o 08-data/reads/${SRR_RNA}_1.clean.fastq.gz -O 08-data/reads/${SRR_RNA}_2.clean.fastq.gz \
-      --html 08-data/reads/${SRR_RNA}.fastp.html
+curl -s "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/013/085/055/GCF_013085055.1_ASM1308505v1/GCF_013085055.1_rnaseq_runs.txt" > 08-data/reads/rnaseq_runs.txt
 ```
 
-## Align RNA-Seq Reads with STAR
+Now, we'll use a Python script to sample one SRA ID per unique BioProject, shuffle them, and save the list. We are using pandas, so make sure it is installed in your environment.
 
-Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis.
+``` python
+import pandas as pd
+import random
+
+# Set seed for reproducibility
+random.seed(42)
+
+# Define file paths
+input_file = "08-data/reads/rnaseq_runs.txt"
+output_file = "08-data/reads/sra_list.txt"
+
+# Read the tab-delimited file.
+# The file from NCBI has columns 'Run' (SRA ID) and 'BioProject'.
+df = pd.read_csv(input_file, sep='\t')
+
+# Sample one SRA ID ('Run') per unique BioProject ID
+sra_samples = df.groupby('Bioproject Accession')['SRA run accession'].first().tolist()
+
+# Shuffle the list of SRA IDs
+random.shuffle(sra_samples)
+
+# Write the shuffled list to the output file
+with open(output_file, 'w') as f:
+    for sra_id in sra_samples:
+        f.write(f"{sra_id}\n")
+
+print(f"Sampled and shuffled {len(sra_samples)} SRA IDs and saved to {output_file}")
+```
+
+Now we can process the samples from our list.
 
 ``` bash
-mkdir -p 08-data/star/INDEX
+cat 08-data/reads/sra_list.txt | \
+  parallel -j $NJOB $prefetch {} -O 08-data/reads
+cat 08-data/reads/sra_list.txt | \
+  parallel -j $NJOB $fasterq_dump {} -O 08-data/reads
+  
+cat 08-data/reads/sra_list.txt | \
+  parallel -j $NJOB $fastp \
+  -i 08-data/reads/{}_1.fastq -I 08-data/reads/{}_2.fastq \
+  -o 08-data/reads/{}_1.clean.fastq.gz -O 08-data/reads/{}_2.clean.fastq.gz \
+  --detect_adapter_for_pe --trim_poly_x --thread $NCPUS_PER_JOB \
+  --html 08-data/reads/{}.fastp.html -j 08-data/reads/{}.fastp.json
+```
 
-STAR --runThreadN $NCPUS \
-  --runMode genomeGenerate \
-  --genomeDir 08-data/star/INDEX \
-  --genomeFastaFiles $assembly
+## Assembly Preprocessing
 
-STAR --runThreadN $NCPUS \
-     --genomeDir 08-data/star/INDEX \
-     --readFilesIn 08-data/reads/${SRR_RNA}_1.clean.fastq.gz 08-data/reads/${SRR_RNA}_2.clean.fastq.gz \
-     --readFilesCommand zcat \
-     --outFileNamePrefix 08-data/star/$SN \
-     --outSAMtype BAM SortedByCoordinate
+Before aligning the RNA-Seq reads, we need to prepare our reference assembly. This involves copying the masked assembly from the previous chapter and simplifying its sequence headers. Many bioinformatics tools struggle with long or complex FASTA headers, so it's a good practice to create clean, simple identifiers.
 
-samtools flagstats 08-data/star/${SN}.sorted.bam
+``` bash
+mkdir -p 08-data/hisat2/
+
+cp $assembly 08-data/assembly.fa
+
+# To simplify downstream analysis, we will rename the fasta headers 
+# from ">CP021931.1 Fusarium oxysporum f. sp. lycopersici str. 4287 chromosome I, whole genome shotgun sequence" 
+# to a simpler format like ">chr_I".
+# This is a crucial step as many bioinformatics tools have issues with complex or long sequence headers.
+sed -i -E 's/>.*chromosome ([IVX]+),.*/>chr_\1/' 08-data/assembly.fa
+```
+
+## Align RNA-Seq Reads with HISAT2
+
+Finally, we will align the cleaned RNA-Seq reads to our genome assembly from 07-repeats-analysis. For alignment, each sample (SRR) will be associated with a read group, and all alignments will be merged into a single BAM file.
+
+``` bash
+hisat2-build 08-data/assembly.fa 08-data/hisat2/${SN}_index
+
+# Align reads, add read groups, and create sorted BAM files
+cat 08-data/reads/sra_list.txt | parallel -j $NJOB "\
+    $hisat2 -p $NCPUS_PER_JOB \
+        -x 08-data/hisat2/index/hisat \
+        -1 08-data/reads/{}_1.clean.fastq.gz \
+        -2 08-data/reads/{}_2.clean.fastq.gz \
+        --rg-id {} --rg \"SM:{}\" \
+        -S 08-data/hisat2/{}.sam \
+        1> 08-data/hisat2/{}.hisat.out 2> 08-data/hisat2/{}.hisat.err"
+  
+cat 08-data/reads/sra_list.txt | parallel -j $NJOB "\
+  $samtools view -bS 08-data/hisat2/{}.sam -o 08-data/hisat2/{}.unsorted.bam"
+
+cat 08-data/reads/sra_list.txt | parallel -j $NJOB "\
+  $samtools sort -@ $NCPUS_PER_JOB -o 08-data/hisat2/{}.sorted.bam 08-data/hisat2/{}.unsorted.bam"
+
+cat 08-data/reads/sra_list.txt | parallel -j $NJOB "\
+  $samtools flagstat 08-data/hisat2/{}.sorted.bam > 08-data/hisat2/{}.flagstat"
+
+# Create a list of the generated BAM files
+find 08-data/hisat2 -name "*.sorted.bam" > 08-data/hisat2/bam.list
+
+# Merge the BAM files into a single file
+samtools merge -@ $NCPUS -b 08-data/hisat2/bam.list -o 08-data/hisat2/merged_alignments.bam
+
+# Index the merged BAM file
+samtools index 08-data/hisat2/merged_alignments.bam
+
+# Optional: remove intermediate BAM files and the list
+# cat 08-data/hisat2/bam.list | xargs rm
+# rm 08-data/hisat2/bam.list
 ```
