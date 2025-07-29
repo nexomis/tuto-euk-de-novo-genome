@@ -235,6 +235,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#download-busco-database" id="toc-download-busco-database" class="nav-link" data-scroll-target="#download-busco-database"><span class="header-section-number">5.4.1</span> Download BUSCO database</a></li>
   <li><a href="#run-busco" id="toc-run-busco" class="nav-link" data-scroll-target="#run-busco"><span class="header-section-number">5.4.2</span> Run BUSCO</a></li>
+  <li><a href="#understand-busco-statistics" id="toc-understand-busco-statistics" class="nav-link" data-scroll-target="#understand-busco-statistics"><span class="header-section-number">5.4.3</span> Understand BUSCO statistics</a></li>
   </ul></li>
   <li><a href="#expected-outcomes" id="toc-expected-outcomes" class="nav-link" data-scroll-target="#expected-outcomes"><span class="header-section-number">5.5</span> Expected Outcomes</a></li>
   </ul></li>
@@ -356,7 +357,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul></li>
 <li><strong>Read-based metrics:</strong> These metrics are calculated by mapping the sequencing reads back to the assembly. They can help validate the assembly structure independently of a reference.
 <ul>
-<li><code># structural variations</code> (when reads are provided)</li>
 <li>Coverage analysis</li>
 <li>Read mapping statistics</li>
 </ul></li>
@@ -387,6 +387,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>-c</code>: Number of CPU threads.</li>
 <li><code>--force</code>: Allows overwriting of existing results.</li>
 </ul>
+</section>
+<section id="understand-busco-statistics" class="level3" data-number="5.4.3">
+<h3 data-number="5.4.3" class="anchored" data-anchor-id="understand-busco-statistics"><span class="header-section-number">5.4.3</span> Understand BUSCO statistics</h3>
+<p>To understand Busco you shall understands</p>
+<p>Marker genes are selected as those that are present in at least 90% of the species in a given lineage</p>
 </section>
 </section>
 <section id="expected-outcomes" class="level2" data-number="5.5">

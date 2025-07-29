@@ -222,6 +222,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#fetch-and-clean-rna-seq-reads" id="toc-fetch-and-clean-rna-seq-reads" class="nav-link" data-scroll-target="#fetch-and-clean-rna-seq-reads"><span class="header-section-number">4</span> Fetch and Clean RNA-Seq Reads</a></li>
   <li><a href="#assembly-preprocessing" id="toc-assembly-preprocessing" class="nav-link" data-scroll-target="#assembly-preprocessing"><span class="header-section-number">5</span> Assembly Preprocessing</a></li>
   <li><a href="#align-rna-seq-reads-with-hisat2" id="toc-align-rna-seq-reads-with-hisat2" class="nav-link" data-scroll-target="#align-rna-seq-reads-with-hisat2"><span class="header-section-number">6</span> Align RNA-Seq Reads with HISAT2</a></li>
+  <li><a href="#optional-prepare-training-data-with-funannotate" id="toc-optional-prepare-training-data-with-funannotate" class="nav-link" data-scroll-target="#optional-prepare-training-data-with-funannotate"><span class="header-section-number">7</span> Optional: Prepare Training Data with Funannotate</a></li>
   </ul>
 </nav>
 </nav>
@@ -262,7 +263,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 data-number="1" class="anchored" data-anchor-id="setup"><span class="header-section-number">1</span> Setup</h2>
 <p>We will use <code>apptainer</code> to manage our software dependencies. Here are the aliases we will use:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">prefetch</span><span class="op">=</span><span class="st">"apptainer run docker://ncbi/sra-tools prefetch"</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">fasterq</span>-dump=<span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">fasterq_dump</span><span class="op">=</span><span class="st">"apptainer run docker://ncbi/sra-tools fasterq-dump"</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">fastp</span><span class="op">=</span><span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">samtools</span><span class="op">=</span><span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">hisat2</span><span class="op">=</span><span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"</span></span>
@@ -272,7 +273,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> fastp=<span class="st">"apptainer exec docker://staphb/fastp fastp"</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> hisat2=<span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> hisat2-build=<span class="st">"apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2-build"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> samtools=<span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> samtools=<span class="st">"apptainer exec docker://staphb/samtools samtools"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> funannotate=<span class="st">"apptainer run --writable-tmpfs docker://nextgenusfs/funannotate:v1.8.17 funannotate"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="variable" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="variable"><span class="header-section-number">2</span> Variable</h2>
@@ -395,9 +397,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Index the merged BAM file</span></span>
 <span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> index 08-data/hisat2/merged_alignments.bam</span>
 <span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: remove intermediate BAM files and the list</span></span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co"># cat 08-data/hisat2/bam.list | xargs rm</span></span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># rm 08-data/hisat2/bam.list</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> sort <span class="at">-@</span> <span class="va">$NCPUS</span> <span class="at">-o</span> 08-data/hisat2/merged_sorted.bam 08-data/hisat2/merged_alignments.bam</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: remove intermediate BAM files and the list</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co"># cat 08-data/hisat2/bam.list | xargs rm</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co"># rm 08-data/hisat2/bam.list</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="optional-prepare-training-data-with-funannotate" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="optional-prepare-training-data-with-funannotate"><span class="header-section-number">7</span> Optional: Prepare Training Data with Funannotate</h2>
+<p><code>funannotate train</code> is a script that prepares RNA-Seq data for gene prediction. It uses Trinity for genome-guided transcriptome assembly and PASA to generate high-quality gene models. This can be an alternative or complementary step to the HISAT2 alignment for generating evidence for gene finders like AUGUSTUS.</p>
+<p>First, we need to combine all the cleaned FASTQ files into single R1 and R2 files.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> 08-data/funannotate_train</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Concatenate all files</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/<span class="pp">*</span>_1.clean.fastq.gz <span class="op">&gt;</span> 08-data/funannotate_train/all_R1.fastq.gz</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> 08-data/reads/<span class="pp">*</span>_2.clean.fastq.gz <span class="op">&gt;</span> 08-data/funannotate_train/all_R2.fastq.gz</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we can run <code>funannotate train</code>. We use the <code>--jaccard_clip</code> option, which is recommended for fungal genomes.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">funannotate</span> train <span class="dt">\</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-i</span> 08-data/assembly.fa <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> 08-data/funannotate_train/output <span class="dt">\</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">-l</span> 08-data/funannotate_train/all_R1.fastq.gz <span class="dt">\</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">-r</span> 08-data/funannotate_train/all_R2.fastq.gz <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">--species</span> <span class="st">"Fusarium oxysporum"</span> <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--strain</span> <span class="va">$SN</span> <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">--jaccard_clip</span> <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">--cpus</span> <span class="va">$NCPUS</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The output of this step can be used for training gene predictors. ```</p>
 
 
 </section>
