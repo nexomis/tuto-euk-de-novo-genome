@@ -107,7 +107,6 @@ Here is a partial categorization of some key QUAST metrics:
     -   Duplication ratio
     -   NGA50 / NGA75
 -   **Read-based metrics:** These metrics are calculated by mapping the sequencing reads back to the assembly. They can help validate the assembly structure independently of a reference.
-    -   `# structural variations` (when reads are provided)
     -   Coverage analysis
     -   Read mapping statistics
 
@@ -142,6 +141,12 @@ done
 -   `-m`: Mode of analysis (genome).
 -   `-c`: Number of CPU threads.
 -   `--force`: Allows overwriting of existing results.
+
+### Understand BUSCO statistics
+
+To understand Busco you shall understands
+
+Marker genes are selected as those that are present in at least 90% of the species in a given lineage
 
 ## Expected Outcomes
 

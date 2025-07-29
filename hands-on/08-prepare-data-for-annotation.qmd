@@ -17,7 +17,7 @@ We will use `apptainer` to manage our software dependencies. Here are the aliase
 
 ``` bash
 export prefetch="apptainer run docker://ncbi/sra-tools prefetch"
-export fasterq-dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
+export fasterq_dump="apptainer run docker://ncbi/sra-tools fasterq-dump"
 export fastp="apptainer exec docker://staphb/fastp fastp"
 export samtools="apptainer exec docker://staphb/samtools samtools"
 export hisat2="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"
@@ -28,6 +28,7 @@ alias fastp="apptainer exec docker://staphb/fastp fastp"
 alias hisat2="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2"
 alias hisat2-build="apptainer exec docker://quay.io/biocontainers/hisat2:2.2.1--h503566f_8 hisat2-build"
 alias samtools="apptainer exec docker://staphb/samtools samtools"
+alias funannotate="apptainer run --writable-tmpfs docker://nextgenusfs/funannotate:v1.8.17 funannotate"
 ```
 
 ## Variable
@@ -178,7 +179,39 @@ samtools merge -@ $NCPUS -b 08-data/hisat2/bam.list -o 08-data/hisat2/merged_ali
 # Index the merged BAM file
 samtools index 08-data/hisat2/merged_alignments.bam
 
+samtools sort -@ $NCPUS -o 08-data/hisat2/merged_sorted.bam 08-data/hisat2/merged_alignments.bam
+
 # Optional: remove intermediate BAM files and the list
 # cat 08-data/hisat2/bam.list | xargs rm
 # rm 08-data/hisat2/bam.list
 ```
+
+## Optional: Prepare Training Data with Funannotate
+
+`funannotate train` is a script that prepares RNA-Seq data for gene prediction. It uses Trinity for genome-guided transcriptome assembly and PASA to generate high-quality gene models. This can be an alternative or complementary step to the HISAT2 alignment for generating evidence for gene finders like AUGUSTUS.
+
+First, we need to combine all the cleaned FASTQ files into single R1 and R2 files.
+
+``` bash
+mkdir -p 08-data/funannotate_train
+
+# Concatenate all files
+cat 08-data/reads/*_1.clean.fastq.gz > 08-data/funannotate_train/all_R1.fastq.gz
+cat 08-data/reads/*_2.clean.fastq.gz > 08-data/funannotate_train/all_R2.fastq.gz
+```
+
+Now we can run `funannotate train`. We use the `--jaccard_clip` option, which is recommended for fungal genomes.
+
+``` bash
+funannotate train \
+    -i 08-data/assembly.fa \
+    -o 08-data/funannotate_train/output \
+    -l 08-data/funannotate_train/all_R1.fastq.gz \
+    -r 08-data/funannotate_train/all_R2.fastq.gz \
+    --species "Fusarium oxysporum" \
+    --strain $SN \
+    --jaccard_clip \
+    --cpus $NCPUS
+```
+
+The output of this step can be used for training gene predictors. \`\`\`

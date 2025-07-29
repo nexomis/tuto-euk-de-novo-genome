@@ -23,11 +23,14 @@ We will set up environment variables for our annotation workflow.
 
 ``` bash
 export SN=Fo47
-export NCPUS=12
-export assembly="$PWD/07-repeats-analysis/rm_out/Fo47.fasta.masked"
+# Attention maximum of 48 cpus for braker3
+export NCPUS=48
+export assembly="$PWD/08-data/assembly.fa"
 export proteins="$PWD/08-data/orthodb/Fungi.fa"
-export rna_bam="$PWD/08-data/star/${SN}Aligned.sortedByCoord.out.bam"
+export rna_bam="$PWD/08-data/hisat2/merged_alignments.bam"
 ```
+
+> Important for `assembly` we need to use a RENAMED fasta file (without space/complex chars). And the SAME USED FOR RNA-SEQ Reference. **There shall be no warning regarding assembly chromosome naming.**
 
 ### Software Dependencies
 
@@ -36,7 +39,7 @@ We will use official containers for our annotation software.
 #### BRAKER3
 
 ``` bash
-alias braker.pl="apptainer run --writable-tmpfs docker://teambraker/braker3:v1.0.11.2 braker.pl"
+alias braker.pl="apptainer run --writable-tmpfs docker://teambraker/braker3:v3.0.7.6 braker.pl"
 ```
 
 #### GALBA
@@ -54,7 +57,7 @@ mkdir -p 09-annot/augustus_config_galba
 The alias binds our local configuration directory to the expected path inside the container.
 
 ``` bash
-alias galba.pl="apptainer run --writable-tmpfs --bind $PWD/09-annot/augustus_config_galba:/usr/share/augustus/config docker://katharinahoff/galba-notebook:latest galba.pl"
+alias galba.pl="apptainer run --writable-tmpfs --bind $PWD/09-annot/augustus_config_galba:/usr/share/augustus/config docker://katharinahoff/galba-notebook:v1.0.11.2 galba.pl"
 ```
 
 ## Annotation Strategy 1: Proteins Only with GALBA
@@ -66,12 +69,13 @@ We will run GALBA using the same protein evidence as before to compare the resul
 ``` bash
 
 mkdir -p 09-annot/galba_prot_only
+
 galba.pl \
-    --genome=09-annot/renamed_assembly.fa \
-    --prot_seq=$proteins \
-    --species=${SN}_galba \
-    --workingdir=09-annot/galba_prot_only \
-    --threads=$NCPUS
+  --genome=$assembly \
+  --prot_seq=$proteins \
+  --species=${SN}_galba \
+  --workingdir=09-annot/galba_prot_only \
+  --threads=$NCPUS
 ```
 
 **BRAKER parameters explained:**
@@ -89,17 +93,16 @@ Now, we will run BRAKER using both protein and RNA-Seq evidence. This is the rec
 
 ``` bash
 mkdir -p 09-annot/prot_rna
-# Make sure to enforce simple name without space (better if integrated at the mapping step) 
-sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
 
 braker.pl \
-    --genome=09-annot/renamed_assembly.fa \
-    --prot_seq=$proteins \
-    --bam=$rna_bam \
-    --species=${SN}_prot_rna \
-    --workingdir=09-annot/prot_rna \
-    --threads=$NCPUS \
-    --fungus
+  --genome=$assembly \
+  --prot_seq=$proteins \
+  --bam=$rna_bam \
+  --species=${SN}_prot_rna \
+  --workingdir=09-annot/prot_rna \
+  --threads=$NCPUS \
+  --fungus
+
 ```
 
 **Additional BRAKER parameter:**
@@ -114,9 +117,8 @@ In this strategy, we will run BRAKER using only protein evidence from our curate
 
 ``` bash
 mkdir -p 09-annot/prot_only
-sed -E 's/^>(\S+).*$/>\1/' $assembly > 09-annot/renamed_assembly.fa
 braker.pl \
-    --genome=09-annot/renamed_assembly.fa \
+    --genome=08-annot/assembly.fa \
     --prot_seq=$proteins \
     --species=${SN}_prot \
     --workingdir=09-annot/prot_only \
