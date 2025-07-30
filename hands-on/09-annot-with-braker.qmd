@@ -97,12 +97,12 @@ mkdir -p 09-annot/prot_rna
 braker.pl \
   --genome=$assembly \
   --prot_seq=$proteins \
+  --UTR=on \
   --bam=$rna_bam \
   --species=${SN}_prot_rna \
   --workingdir=09-annot/prot_rna \
   --threads=$NCPUS \
   --fungus
-
 ```
 
 **Additional BRAKER parameter:**
